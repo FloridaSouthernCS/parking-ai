@@ -19,8 +19,8 @@ save_path = os.path.join(main_path, "data")
 def main():
     
     # Default Garden enterance IP
-    ip = '10.7.0.19/image4'
-
+    #addr = 'http://10.7.0.19/image4?res=half&quality=1&doublescan=0'
+    addr = os.path.join(save_path, "test2.mp4")
     print("==== KEY COMMANDS ====")
     print(" 'r' = start/stop record ")
     print(" 'q' = exit program ")
@@ -29,44 +29,50 @@ def main():
     keys_clicked = []
     _thread.start_new_thread(check_key, (keys_clicked,))
 
-    pull_feed(ip, keys_clicked)
+    pull_feed(addr, keys_clicked)
 
     
-def pull_feed(ip, keys_clicked):
+def pull_feed(addr, keys_clicked):
     frames = []
-    live_img = []
     count = 0
-    feed_addr = 'http://{}?res=half&quality=1&doublescan=0'.format(ip)
+    videofeed = cv2.VideoCapture(addr)
     # Continue until quit occurs
     while 'q' not in keys_clicked:
         # Pull image from camera
         
-        feed, spf  = request_img(feed_addr)
+        # feed, spf  = request_img(addr)
+        ret, feed = videofeed.read()
 
         # Convert image into array
-        img = np.asarray(Image.open(BytesIO(feed.content)))
-
+        #img = np.asarray(Image.open(BytesIO(feed.content)))
+        img = feed
+        
+        show_img(img)
         # Show image in window
-        window = imutils.resize(img, width=400)
-        cv2.imshow('Live Camera Feed of {}'.format(""), window )
-        cv2.waitKey(1)
-
+        #window = imutils.resize(img, width=400)
+        
+    videofeed.release()
+    cv2.destroyAllWindows()
         # Record if 'r' has been toggled
-        if ('r' in keys_clicked and (keys_clicked.count('r')/2) % 2 > 0):
+    #     if ('r' in keys_clicked and (keys_clicked.count('r')/2) % 2 > 0):
 
-            print('recording...', count)
+    #         print('recording...', count)
 
-            # Convert image into np array
-            frame = np.asarray(img)
-            frames.append(frame)
+    #         # Convert image into np array
+    #         frame = np.asarray(img)
+    #         frames.append(frame)
       
-        count += 1
+    #     count += 1
 
-    # If there were frames pulled, save a recording
-    if frames != []:
-        imageio.mimwrite(os.path.join(save_path,'test.mp4'), frames , fps = 2)
+    # # If there were frames pulled, save a recording
+    # if frames != []:
+    #     imageio.mimwrite(os.path.join(save_path,'test.mp4'), frames , fps = 2)
     
-            
+
+def show_img(img):
+    window = cv2.resize(img, (600,400) )
+    cv2.imshow('Video', window )
+    cv2.waitKey(1)
 
 def request_img(request, verbose=0):
     if verbose == 1: print("Grabbing frame...")

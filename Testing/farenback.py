@@ -4,9 +4,15 @@ import numpy as np
 import cv2
 import os
 
+main_path = os.path.dirname(os.path.abspath(__file__)) 
+save_path = os.path.join(main_path, "data")
+addr = os.path.join(save_path, "test2.mp4")
+cap = cv2.VideoCapture(addr)
+
+
 def dense_optical_flow(method, video_path, params=[], to_gray=True):
     # Read the video and first frame
-    cap = cv2.VideoCapture(video_path)
+    #cap = cv2.VideoCapture(video_path)
     ret, old_frame = cap.read()
 
     # crate HSV & make Value a constant
@@ -63,7 +69,7 @@ def dense_optical_flow(method, video_path, params=[], to_gray=True):
 
 
 def main():
-    dense_optical_flow(cv2.calcOpticalFlowFarneback, 'sample3.mp4',[0.5, 3, 15, 3, 5, 1.2, 0])
+    dense_optical_flow(cv2.calcOpticalFlowFarneback, 'sample3.mp4',[0.5, 20, 15, 3, 5, 1.2, 1])
    
 
 main()

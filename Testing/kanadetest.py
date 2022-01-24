@@ -3,7 +3,10 @@ import numpy as np
 import cv2
 import os
 
-cap = cv2.VideoCapture('sample3.mp4')
+main_path = os.path.dirname(os.path.abspath(__file__)) 
+save_path = os.path.join(main_path, "data")
+addr = os.path.join(save_path, "test2.mp4")
+cap = cv2.VideoCapture(addr)
   
 # params for corner detection
 feature_params = dict( maxCorners = 50,
