@@ -26,13 +26,34 @@ def main():
     _thread.start_new_thread(check_key, (keys_clicked,))
 
     # Default Garden enterance IP
-    addr = 'http://10.7.0.19/image4?res=half&quality=1&doublescan=0'
-    #addr = os.path.join(save_path, "test2.mp4")
-    
+    # addr = 'http://10.7.0.19/image4?res=half&quality=1&doublescan=0'
+    # pull_from_web(addr, keys_clicked)
+
+    # Saved mp4 examples 
+    addr = os.path.join(save_path, "test2.mp4")
     pull_from_addr(addr, keys_clicked)
 
-# Used to watch live video from web
+# Pulls saved feed
 def pull_from_addr(addr, keys_clicked):
+
+    # pull video from addr filepatth
+    vid = cv2.VideoCapture(addr)
+    
+    # while q is not hit
+    while 'q' not in keys_clicked:
+
+        # grab frame
+        ret, frame = vid.read()
+
+        # show frame 
+        show_img(frame)
+
+    
+    vid.release()
+    cv2.destroyAllWindows()
+
+# Used to watch live video from web
+def pull_from_web(addr, keys_clicked):
     print("==== KEY COMMANDS ====")
     print(" 'r' = start/stop record ")
     print(" 'q' = exit program ")
@@ -76,7 +97,7 @@ def save_recording(frames):
 # Display the image
 def show_img(img):
     window = cv2.resize(img, (600,400) )
-    cv2.imshow('Video', window )
+    cv2.imshow('Video', window)
     cv2.waitKey(1)
 
 # Request image from web

@@ -39,7 +39,6 @@ def pull_feed(addr, keys_clicked):
     # Continue until quit occurs
     while 'q' not in keys_clicked:
         # Pull image from camera
-        
         # feed, spf  = request_img(addr)
         ret, feed = videofeed.read()
 
