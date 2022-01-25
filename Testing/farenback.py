@@ -5,8 +5,8 @@ import cv2
 import os
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
-save_path = os.path.join(main_path, "data")
-addr = os.path.join(save_path, "test2.mp4")
+save_path = os.path.join(main_path, "postprocess")
+addr = os.path.join(save_path, "test.mp4")
 cap = cv2.VideoCapture(addr)
 
 
@@ -25,6 +25,7 @@ def dense_optical_flow(method, video_path, params=[], to_gray=True):
     frame_rate = 5
     prev = 0
     while True:
+        
         time.sleep(.01)
         # Read the next frame
         ret, new_frame = cap.read()
@@ -69,7 +70,7 @@ def dense_optical_flow(method, video_path, params=[], to_gray=True):
 
 
 def main():
-    dense_optical_flow(cv2.calcOpticalFlowFarneback, 'sample3.mp4',[0.5, 20, 15, 3, 5, 1.2, 1])
-   
+    dense_optical_flow(cv2.calcOpticalFlowFarneback, 'sample3.mp4',[0.5, 10, 10, 3, 10, 1.2, 0])
+    cv2.calcOpticalFlowFarneback()
 
 main()

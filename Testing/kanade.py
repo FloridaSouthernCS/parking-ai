@@ -4,8 +4,8 @@ import cv2
 import os
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
-save_path = os.path.join(main_path, "data")
-addr = os.path.join(save_path, "test2.mp4")
+save_path = os.path.join(main_path, "postprocess")
+addr = os.path.join(save_path, "test.mp4")
 cap = cv2.VideoCapture(addr)
   
 # params for corner detection
@@ -25,32 +25,42 @@ color = np.random.randint(0, 255, (100, 3))
   
 # Take first frame and find corners in it
 ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+
 old_gray = cv2.cvtColor(old_frame,
                         cv2.COLOR_BGR2GRAY)
+
 p0 = cv2.goodFeaturesToTrack(old_gray, mask = None,
                              **feature_params)
-  
+
 # Create a mask image for drawing purposes
 mask = np.zeros_like(old_frame)
   
 while(1):
-      
+    
     ret, frame = cap.read()
     frame_gray = cv2.cvtColor(frame,
                               cv2.COLOR_BGR2GRAY)
-  
+    
     # calculate optical flow
     p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray,
                                            frame_gray,
                                            p0, None,
                                            **lk_params)
-  
+    
     # Select good points
     try:
         good_new = p1[st == 1]
         good_old = p0[st == 1]
-    except print(0):
-        continue
+    except Exception as e:
+        pass
     
     
     # draw the tracks
@@ -64,7 +74,7 @@ while(1):
           
         frame = cv2.circle(frame, (int(a), int(b)), 5,
                            color[i].tolist(), -1)
-          
+    #pdb.set_trace()
     img = cv2.add(frame, mask)
   
     cv2.imshow('frame', img)
