@@ -5,6 +5,8 @@ import argparse
 import os
 import numpy as np
 import imageio
+import scipy.ndimage as sp
+
 # parser = argparse.ArgumentParser(description='This program shows how to use background subtraction methods provided by \
 #                                               OpenCV. You can process both videos and images.')
 # parser.add_argument('--input', type=str, help='Path to a video or a sequence of image.', default='vtest.avi')
@@ -20,17 +22,21 @@ grab_path = os.path.join(main_path, "preprocess")
 addr = os.path.join(grab_path, "test2.mp4")
 save_path = os.path.join(main_path, "postprocess")
 
-backSub = cv.createBackgroundSubtractorKNN(dist2Threshold=1200, detectShadows=False)
+backSub_knn = cv.createBackgroundSubtractorKNN(dist2Threshold=2000, detectShadows=False)
+backSub_mog = cv.createBackgroundSubtractorMOG2(varThreshold= 500, detectShadows=False)
 capture = cv.VideoCapture(addr)
 frames = []
 def main():
     while True:
-        time.sleep(.1)
+        # time.sleep(.1)
         ret, frame = capture.read()
         if frame is None:
             break
-        
-        fgMask = backSub.apply(frame)
+
+        frame = sp.gaussian_filter(frame, sigma = 7)
+        # fgMask_knn = backSub_knn.apply(frame)
+        fgMask_mog = backSub_mog.apply(frame)
+
         
         
         cv.rectangle(frame, (10, 2), (100,20), (255,255,255), -1)
@@ -39,16 +45,21 @@ def main():
         
         
         cv.imshow('Frame', frame)
-        cv.imshow('FG Mask', fgMask)
+        # cv.imshow('FG Mask', fgMask_knn)
+        cv.imshow('FG Mask', fgMask_mog)
+
         
         
         keyboard = cv.waitKey(30)
         if keyboard == 'q' or keyboard == 27:
             break
-        start_recording(fgMask, frames)
+        start_recording(fgMask_mog, frames)
 
 
     save_recording(frames)
+
+def color_threshold():
+    pass
 
 # Modify array of frames
 def start_recording(img, frames):
@@ -61,8 +72,8 @@ def start_recording(img, frames):
 # Save frames to mp4 file
 def save_recording(frames):
     
-    imageio.mimwrite(os.path.join(save_path,'test.mp4'), frames , fps = 2)
-    print("Recording saved as '{}'".format('test.mp4'))
+    imageio.mimwrite(os.path.join(save_path,'test1.mp4'), frames , fps = 2)
+    print("Recording saved as '{}'".format('test1.mp4'))
 
 
 main()
