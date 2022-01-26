@@ -1,4 +1,5 @@
 from __future__ import print_function
+import time
 import cv2 as cv
 import argparse
 import os
@@ -19,12 +20,12 @@ grab_path = os.path.join(main_path, "preprocess")
 addr = os.path.join(grab_path, "test2.mp4")
 save_path = os.path.join(main_path, "postprocess")
 
-backSub = cv.createBackgroundSubtractorMOG2(varThreshold=2000, detectShadows=False)
+backSub = cv.createBackgroundSubtractorKNN(dist2Threshold=1200, detectShadows=False)
 capture = cv.VideoCapture(addr)
 frames = []
 def main():
     while True:
-        
+        time.sleep(.1)
         ret, frame = capture.read()
         if frame is None:
             break
