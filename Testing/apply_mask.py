@@ -12,7 +12,7 @@ main_path = os.path.dirname(os.path.abspath(__file__))
 original_path = os.path.join(main_path, "preprocess")
 mask_path = os.path.join(main_path, "postprocess")
 original = os.path.join(original_path, "test2.mp4")
-mask = os.path.join(mask_path, "test.mp4")
+mask = os.path.join(mask_path, "test1.mp4")
 save_path = os.path.join(main_path, "postprocess2")
 
 original_cap = cv.VideoCapture(original)
@@ -29,8 +29,8 @@ def main():
     
         img_gray = cv.cvtColor(mframe, cv.COLOR_BGR2GRAY)
         frame = cv.bitwise_or(oframe, oframe, mask=img_gray)
-        #cv.imshow('Frame', oframe)
-        #cv.waitKey(1)
+        cv.imshow('Frame', frame)
+        cv.waitKey(1)
 
         keyboard = cv.waitKey(30)
         if keyboard == 'q' or keyboard == 27:
@@ -50,8 +50,8 @@ def start_recording(img, frames):
 # Save frames to mp4 file
 def save_recording(frames):
     
-    imageio.mimwrite(os.path.join(save_path,'test.mp4'), frames , fps = 2)
-    print("Recording saved as '{}'".format('test.mp4'))
+    imageio.mimwrite(os.path.join(save_path,'test1.mp4'), frames , fps = 2)
+    print("Recording saved as '{}'".format('test1.mp4'))
 
 
 main()

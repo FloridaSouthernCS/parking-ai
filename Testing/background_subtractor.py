@@ -22,8 +22,8 @@ grab_path = os.path.join(main_path, "preprocess")
 addr = os.path.join(grab_path, "test2.mp4")
 save_path = os.path.join(main_path, "postprocess")
 
-backSub_knn = cv.createBackgroundSubtractorKNN(dist2Threshold=2000, detectShadows=False)
-backSub_mog = cv.createBackgroundSubtractorMOG2(varThreshold= 500, detectShadows=False)
+backSub_knn = cv.createBackgroundSubtractorKNN(dist2Threshold=900, detectShadows=False)
+backSub_mog = cv.createBackgroundSubtractorMOG2(varThreshold= 900, detectShadows=False)
 capture = cv.VideoCapture(addr)
 frames = []
 def main():
@@ -33,9 +33,11 @@ def main():
         if frame is None:
             break
 
-        frame = sp.gaussian_filter(frame, sigma = 7)
+        frame = sp.gaussian_filter(frame, sigma = 9)
         # fgMask_knn = backSub_knn.apply(frame)
         fgMask_mog = backSub_mog.apply(frame)
+        fgMask_knn = backSub_knn.apply(fgMask_mog)
+        
 
         
         
@@ -45,15 +47,15 @@ def main():
         
         
         cv.imshow('Frame', frame)
-        # cv.imshow('FG Mask', fgMask_knn)
-        cv.imshow('FG Mask', fgMask_mog)
+        cv.imshow('FG Mask', fgMask_knn)
+        #cv.imshow('FG Mask', fgMask_knn)
 
         
         
         keyboard = cv.waitKey(30)
         if keyboard == 'q' or keyboard == 27:
             break
-        start_recording(fgMask_mog, frames)
+        start_recording(fgMask_knn, frames)
 
 
     save_recording(frames)
