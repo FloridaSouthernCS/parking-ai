@@ -78,7 +78,7 @@ def pull_from_web(addr, keys_clicked):
         start_recording(gray_img, frames, keys_clicked)
 
     # If there were frames pulled, save a recording
-    save_recording(frames)
+    #save_recording(frames)
 
 # Modify array of frames
 def start_recording(img, frames, keys_clicked):

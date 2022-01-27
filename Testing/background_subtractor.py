@@ -36,6 +36,7 @@ def main():
         frame = sp.gaussian_filter(frame, sigma = 9)
         # fgMask_knn = backSub_knn.apply(frame)
         fgMask_mog = backSub_mog.apply(frame)
+        
         fgMask_knn = backSub_knn.apply(fgMask_mog)
         
 
@@ -46,19 +47,19 @@ def main():
                 cv.FONT_HERSHEY_SIMPLEX, 0.5 , (0,0,0))
         
         
-        cv.imshow('Frame', frame)
+        #cv.imshow('Frame', frame)
         cv.imshow('FG Mask', fgMask_knn)
         #cv.imshow('FG Mask', fgMask_knn)
 
         
         
-        keyboard = cv.waitKey(30)
+        keyboard = cv.waitKey(1)
         if keyboard == 'q' or keyboard == 27:
             break
         start_recording(fgMask_knn, frames)
 
 
-    save_recording(frames)
+    #save_recording(frames)
 
 def color_threshold():
     pass

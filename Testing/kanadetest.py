@@ -5,18 +5,18 @@ import os
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
 grab_path = os.path.join(main_path, "postprocess2")
-addr = os.path.join(grab_path, "test.mp4")
+addr = os.path.join(grab_path, "test4.mp4")
 cap = cv2.VideoCapture(addr)
   
 # params for corner detection
 feature_params = dict( maxCorners = 50,
-                       qualityLevel = 0.3,
-                       minDistance = 7,
-                       blockSize = 7 )
+                       qualityLevel = .99,
+                       minDistance = 10,
+                       blockSize = 40 )
   
 # Parameters for lucas kanade optical flow
 lk_params = dict( winSize = (15, 15),
-                  maxLevel = 2,
+                  maxLevel = 20,
                   criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
                               10, 0.03))
   
@@ -31,8 +31,53 @@ ret, old_frame = cap.read()
 ret, old_frame = cap.read()
 ret, old_frame = cap.read()
 ret, old_frame = cap.read()
+
 ret, old_frame = cap.read()
 ret, old_frame = cap.read()
+
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+ret, old_frame = cap.read()
+
+
+
 
 old_gray = cv2.cvtColor(old_frame,
                         cv2.COLOR_BGR2GRAY)
@@ -46,14 +91,27 @@ mask = np.zeros_like(old_frame)
 while(1):
     
     ret, frame = cap.read()
+    if not ret:
+        break
     frame_gray = cv2.cvtColor(frame,
-                              cv2.COLOR_BGR2GRAY)
+                            cv2.COLOR_BGR2GRAY)
     
-    # calculate optical flow
-    p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray,
-                                           frame_gray,
-                                           p0, None,
-                                           **lk_params)
+    # print(np.asarray(old_gray).shape, np.asarray(frame_gray).shape)
+    # cv2.imshow("",old_gray)
+    # cv2.imshow("",frame_gray)
+    # cv2.waitKey()
+    try:
+        # calculate optical flow
+        p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray,
+                                            frame_gray,
+                                            p0, None,
+                                            **lk_params)
+    except Exception as e:
+        print(e)
+        continue
+    
+    
+    
     
     # Select good points
     try:

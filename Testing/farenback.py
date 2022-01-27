@@ -6,7 +6,7 @@ import os
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
 grab_path = os.path.join(main_path, "postprocess2")
-addr = os.path.join(grab_path, "test.mp4")
+addr = os.path.join(grab_path, "test4.mp4")
 cap = cv2.VideoCapture(addr)
 
 

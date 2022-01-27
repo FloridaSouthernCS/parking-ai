@@ -37,7 +37,7 @@ def main():
             break
         start_recording(frame, frames)
 
-    save_recording(frames)
+    #save_recording(frames)
 
 # Modify array of frames
 def start_recording(img, frames):
