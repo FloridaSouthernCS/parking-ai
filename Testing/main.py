@@ -24,25 +24,37 @@ def main():
     _thread.start_new_thread(check_key, (keys_clicked,))
 
     # Default Garden enterance IP
-    # addr = 'http://10.7.0.19/image4?res=half&quality=1&doublescan=0'
+    addr = 'http://10.7.0.19/image4?res=half&quality=1&doublescan=0'
+    
     # pull_from_web(addr, keys_clicked)
 
     # Saved mp4 examples 
-    addr = os.path.join(save_path, "test2.mp4")
-    pull_from_addr(addr, keys_clicked)
+    #addr = os.path.join(save_path, "test2.mp4")
+    #pull_from_addr(addr, keys_clicked)
+    pull_from_web(addr, keys_clicked=keys_clicked)
+    #ret, frame = vid.read()
 
 # Pulls saved feed
 def pull_from_addr(addr, keys_clicked):
-
+    pdb.set_trace()
     # pull video from addr filepatth
-    vid = cv2.VideoCapture(addr)
+    try:
+        vid = cv2.VideoCapture(addr)
+    except Exception as e:
+        print(e)
+
     
     # while q is not hit
     while 'q' not in keys_clicked:
 
         # grab frame
-        ret, frame = vid.read()
-
+        try:
+            ret, frame = vid.read()
+        except Exception as e:
+            print(e)
+            continue
+        
+        
         # show frame 
         show_img(frame)
 
@@ -76,7 +88,7 @@ def pull_from_web(addr, keys_clicked):
         start_recording(gray_img, frames, keys_clicked)
 
     # If there were frames pulled, save a recording
-    #save_recording(frames)
+    save_recording(frames)
 
 # Modify array of frames
 def start_recording(img, frames, keys_clicked):
@@ -84,13 +96,14 @@ def start_recording(img, frames, keys_clicked):
         # Convert image into np array
         frame = np.asarray(img)
         frames.append(frame)
+        print("recording")
     return frames
 
 # Save frames to mp4 file
 def save_recording(frames):
     if frames != []:
-        imageio.mimwrite(os.path.join(save_path,'test.mp4'), frames , fps = 2)
-        print("Recording saved as '{}'".format('test.mp4'))
+        imageio.mimwrite(os.path.join(save_path,'test17.mp4'), frames , fps = 2)
+        print("Recording saved as '{}'".format('test17.mp4'))
 
 # Display the image
 def show_img(img):
