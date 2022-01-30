@@ -19,27 +19,28 @@ def main():
 
     kernel = None
 
-    background_object = cv.createBackgroundSubtractorMOG2(varThreshold=900, detectShadows=True)
+    background_object = cv.createBackgroundSubtractorMOG2(varThreshold=100, detectShadows=True)
     frames = []
     while True:
         ret, frame = video.read()
         if not ret:
             break
-        fgmask = sp.gaussian_filter(frame, sigma = 4)
-        fgmask = background_object.apply(fgmask)
         
-        #fgmask = sp.gaussian_filter(fgmask, sigma = 4)
-        _, fgmask = cv.threshold(fgmask, 127, 255, cv.THRESH_BINARY)
+        fgmask = background_object.apply(frame)
+        
+        _, fgmask = cv.threshold(fgmask, 250, 255, cv.THRESH_BINARY)
 
-        fgmask = cv.erode(fgmask, kernel=kernel, iterations=6)
-        fgmask = cv.dilate(fgmask, kernel=kernel, iterations=50)
+        fgmask = cv.erode(fgmask, kernel=kernel, iterations=3)
+        fgmask = cv.dilate(fgmask, kernel=kernel, iterations=10)
+        
         # cv.imshow("", fgmask)
         # cv.waitKey(1)
-        #fgmask = sp.gaussian_filter(fgmask, sigma = 2.7)
+        
         contours, _ = cv.findContours(fgmask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         frame_copy = frame.copy()
         for c in contours:
-            if cv.contourArea(c) > 8000:
+            # 
+            if cv.contourArea(c) > 16000:
                 x, y, width, height = cv.boundingRect(c)
                 cv.rectangle(frame_copy, (x,y), (x+width, y+height), (0,0,255), 2)
                 cv.putText(frame_copy, "car detected", (x,y-10), cv.FONT_HERSHEY_COMPLEX, 0.3, (0, 255, 0), 1, cv.LINE_AA)
@@ -52,10 +53,6 @@ def main():
     video.release()
     cv.destroyAllWindows()
     #save_recording(frames)
-
-
-    
-
 
 # Modify array of frames
 def start_recording(img, frames):

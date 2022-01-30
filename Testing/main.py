@@ -1,6 +1,4 @@
 
-
-from tracemalloc import start
 import cv2
 import time
 from PIL import Image
