@@ -83,7 +83,7 @@ def pull_from_web(addr, keys_clicked):
         # Get FPS
         if ctime:
             fps = format(1/(ctime-stime),".2f")
-            
+
         # Get start time
         stime = time.time()
 
@@ -161,8 +161,8 @@ def save_recording(frames):
 def show_img(img, fps):
     
     window = cv2.resize(img, (600,400) )
-    cv2.rectangle(window, (10,10), (40, 40), (0,0,0), 2)
-    cv2.putText(window, "FPS: {}".format(fps), (20,20), cv2.FONT_HERSHEY_COMPLEX, .5, (255, 255, 255), 1, 2)
+    cv2.rectangle(window, (0,0), (80, 10), (127,127,127), -1)
+    cv2.putText(window, "FPS: {}".format(fps), (0,10), cv2.FONT_HERSHEY_TRIPLEX, .5, (255, 255, 255), 1, 2)
     cv2.imshow('Video', window)
     cv2.waitKey(1)
 
