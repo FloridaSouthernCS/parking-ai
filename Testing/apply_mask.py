@@ -11,7 +11,7 @@ from PIL import Image
 main_path = os.path.dirname(os.path.abspath(__file__)) 
 original_path = os.path.join(main_path, "preprocess")
 mask_path = os.path.join(main_path, "postprocess")
-original = os.path.join(original_path, "test2.mp4")
+original = os.path.join(original_path, "preprocess0.mp4")
 mask = os.path.join(mask_path, "test1.mp4")
 save_path = os.path.join(main_path, "postprocess2")
 

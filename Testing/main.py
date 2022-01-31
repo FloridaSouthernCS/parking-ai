@@ -10,8 +10,6 @@ import os
 import pdb
 import imageio
 import keyboard
-import _thread
-import imutils
 import matplotlib.pyplot as plt
 
 main_path = os.path.dirname(os.path.abspath(__file__))
@@ -23,7 +21,7 @@ valid_keys = []
 def main():
     global valid_keys
     # Track what keys are pressed
-    valid_keys += ['r', 's', 'q']
+    valid_keys += ['r', 's', 'q', 'd']
     check_key(valid_keys)
     
     
@@ -72,14 +70,24 @@ def pull_from_web(addr, keys_clicked):
     print("==== KEY COMMANDS ====")
     print(" 'r' = start/stop record ")
     print(" 's' = save recording ")
+    print(" 'd' = delete queued frames ")
     print(" 'q' = exit program ")
     frames = []
     
     # Continue until quit occurs
+    stime = 0
+    ctime = 0
+    fps = 0
     while 'q' not in keys_clicked:
         
+        # Get FPS
+        if ctime:
+            fps = format(1/(ctime-stime),".2f")
+            
+        # Get start time
+        stime = time.time()
+
         # Pull image from addr
-        
         feed = request_img(addr)
 
         # Convert image into array
@@ -89,19 +97,25 @@ def pull_from_web(addr, keys_clicked):
         gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         
         # Show image in window
-        show_img(gray_img)
+        show_img(gray_img, fps)
     
         #Pass recording params
-        frames = handle_recording(gray_img, frames, keys_clicked)
+        frames = handle_key_recording(gray_img, frames, keys_clicked)
 
+        # Get current time
+        ctime = time.time()
             
-def handle_recording(img, frames, keys_clicked):
+def handle_key_recording(img, frames, keys_clicked):
+
+    if 'd' in keys_clicked:
+        keys_clicked.remove('d')
+        frames = []
+        print("Frames deleted")
 
     # Every other time r is clicked, record
     if ('r' in keys_clicked and (keys_clicked.count('r')) % 2 > 0):
         frames = start_recording(img, frames)
 
-    
     # Save every time s is clicked
     if 's' in keys_clicked:
         if frames != []:
@@ -144,9 +158,11 @@ def save_recording(frames):
         i += 1
 
 # Display the image
-def show_img(img):
+def show_img(img, fps):
     
     window = cv2.resize(img, (600,400) )
+    cv2.rectangle(window, (10,10), (40, 40), (0,0,0), 2)
+    cv2.putText(window, "FPS: {}".format(fps), (20,20), cv2.FONT_HERSHEY_COMPLEX, .5, (255, 255, 255), 1, 2)
     cv2.imshow('Video', window)
     cv2.waitKey(1)
 
