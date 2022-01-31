@@ -23,7 +23,7 @@ valid_keys = []
 def main():
     global valid_keys
     # Track what keys are pressed
-    valid_keys += ['a', 'e']
+    valid_keys += ['r', 's', 'q']
     check_key(valid_keys)
     
     
@@ -71,12 +71,13 @@ def pull_from_addr(addr, keys_clicked):
 def pull_from_web(addr, keys_clicked):
     print("==== KEY COMMANDS ====")
     print(" 'r' = start/stop record ")
+    print(" 's' = save recording ")
     print(" 'q' = exit program ")
     frames = []
     
     # Continue until quit occurs
     while 'q' not in keys_clicked:
-        pdb.set_trace()
+        
         # Pull image from addr
         
         feed = request_img(addr)
@@ -91,19 +92,24 @@ def pull_from_web(addr, keys_clicked):
         show_img(gray_img)
     
         #Pass recording params
-        handle_recording(gray_img, frames, keys_clicked)
+        frames = handle_recording(gray_img, frames, keys_clicked)
 
             
 def handle_recording(img, frames, keys_clicked):
-    
+
     # Every other time r is clicked, record
-    if ('r' in keys_clicked and (keys_clicked.count('r')/2) % 2 > 0):
+    if ('r' in keys_clicked and (keys_clicked.count('r')) % 2 > 0):
         frames = start_recording(img, frames)
 
     
     # Save every time s is clicked
-    if frames != [] and 's' in keys_clicked:
-        frames = save_recording(frames)
+    if 's' in keys_clicked:
+        if frames != []:
+            frames = save_recording(frames)
+        else:
+            keys_clicked.remove('s')
+            print("There are no frames to save")
+    return frames
 
 # Modify array of frames
 def start_recording(img, frames):
@@ -133,7 +139,7 @@ def save_recording(frames):
             print("Recording saved as '{}'".format(file_format))
             frames = []
             keys_clicked.remove('s')
-            break
+            return frames
             
         i += 1
 
