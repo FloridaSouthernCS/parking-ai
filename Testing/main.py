@@ -1,4 +1,5 @@
 
+import enum
 import cv2
 import time
 from PIL import Image
@@ -13,30 +14,34 @@ import _thread
 import imutils
 import matplotlib.pyplot as plt
 
-main_path = os.path.dirname(os.path.abspath(__file__)) 
-save_path = os.path.join(main_path, "preprocess")
-
+main_path = os.path.dirname(os.path.abspath(__file__))
+save_folder = "preprocess"
+save_path = os.path.join(main_path, save_folder)
+keys_clicked = []
+valid_keys = []
 
 def main():
-
+    global valid_keys
     # Track what keys are pressed
-    keys_clicked = []
-    _thread.start_new_thread(check_key, (keys_clicked,))
-
+    valid_keys += ['a', 'e']
+    check_key(valid_keys)
+    
+    
     # Default Garden enterance IP
     addr = 'http://10.7.0.19/image4?res=half&quality=1&doublescan=0'
     
-    # pull_from_web(addr, keys_clicked)
-
+    pull_from_web(addr, keys_clicked)
+    
+    
     # Saved mp4 examples 
     #addr = os.path.join(save_path, "test2.mp4")
     #pull_from_addr(addr, keys_clicked)
-    pull_from_web(addr, keys_clicked=keys_clicked)
+    #pull_from_web('http://10.7.0.17/image3?res=half&quality=1&doublescan=0', keys_clicked=keys_clicked)
     #ret, frame = vid.read()
 
 # Pulls saved feed
 def pull_from_addr(addr, keys_clicked):
-    pdb.set_trace()
+    
     # pull video from addr filepatth
     try:
         vid = cv2.VideoCapture(addr)
@@ -71,8 +76,9 @@ def pull_from_web(addr, keys_clicked):
     
     # Continue until quit occurs
     while 'q' not in keys_clicked:
-        
+        pdb.set_trace()
         # Pull image from addr
+        
         feed = request_img(addr)
 
         # Convert image into array
@@ -84,29 +90,56 @@ def pull_from_web(addr, keys_clicked):
         # Show image in window
         show_img(gray_img)
     
-        #Record if 'r' has been toggled
-        start_recording(gray_img, frames, keys_clicked)
+        #Pass recording params
+        handle_recording(gray_img, frames, keys_clicked)
 
-    # If there were frames pulled, save a recording
-    save_recording(frames)
+            
+def handle_recording(img, frames, keys_clicked):
+    
+    # Every other time r is clicked, record
+    if ('r' in keys_clicked and (keys_clicked.count('r')/2) % 2 > 0):
+        frames = start_recording(img, frames)
+
+    
+    # Save every time s is clicked
+    if frames != [] and 's' in keys_clicked:
+        frames = save_recording(frames)
 
 # Modify array of frames
-def start_recording(img, frames, keys_clicked):
-    if ('r' in keys_clicked and (keys_clicked.count('r')/2) % 2 > 0):
-        # Convert image into np array
-        frame = np.asarray(img)
-        frames.append(frame)
-        print("recording")
+def start_recording(img, frames):
+    
+    # Convert image into np array
+    frame = np.asarray(img)
+    frames.append(frame)
+    print("recording for {} frames".format(len(frames)))
     return frames
 
 # Save frames to mp4 file
 def save_recording(frames):
-    if frames != []:
-        imageio.mimwrite(os.path.join(save_path,'test17.mp4'), frames , fps = 2)
-        print("Recording saved as '{}'".format('test17.mp4'))
+    global keys_clicked
+    
+    filenames = []
+    for filename in os.listdir(save_path):
+        filenames += [filename]
+        
+    
+    i = 0
+    while True:
+        
+        file_format = '{}{}.mp4'.format(save_folder, i)
+        if file_format not in filenames:
+            imageio.mimwrite(os.path.join(save_path, file_format), frames , fps = 2)
+            print("Saving recording...")
+            print("Recording saved as '{}'".format(file_format))
+            frames = []
+            keys_clicked.remove('s')
+            break
+            
+        i += 1
 
 # Display the image
 def show_img(img):
+    
     window = cv2.resize(img, (600,400) )
     cv2.imshow('Video', window)
     cv2.waitKey(1)
@@ -121,13 +154,10 @@ def request_img(request, verbose=0):
     return feed
 
 # Check if a key was clicked
-def check_key(a_list):
-    while True:
-        try:
-            key = keyboard.read_key()
-            a_list.append(key)
-        except:
-            pass
+def check_key(valid_keys):
+    global keys_clicked
+    for i in range(len(valid_keys)):
+        keyboard.on_press_key(valid_keys[i], lambda output:keys_clicked.append(output.name))
 
 if __name__ == "__main__":
     main()

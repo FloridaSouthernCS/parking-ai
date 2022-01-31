@@ -11,7 +11,7 @@ import pdb
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
 grab_path = os.path.join(main_path, "preprocess")
-addr = os.path.join(grab_path, "test2.mp4")
+addr = os.path.join(grab_path, "test10.mp4")
 save_path = os.path.join(main_path, "postprocess2")
 
 def main():
@@ -28,14 +28,14 @@ def main():
         fgmask = sp.gaussian_filter(frame, sigma = 4)
         fgmask = background_object.apply(fgmask)
         
-        #fgmask = sp.gaussian_filter(fgmask, sigma = 4)
+        fgmask = sp.gaussian_filter(fgmask, sigma = 4)
         _, fgmask = cv.threshold(fgmask, 127, 255, cv.THRESH_BINARY)
 
         fgmask = cv.erode(fgmask, kernel=kernel, iterations=6)
-        fgmask = cv.dilate(fgmask, kernel=kernel, iterations=50)
+        fgmask = cv.dilate(fgmask, kernel=kernel, iterations=30)
         # cv.imshow("", fgmask)
         # cv.waitKey(1)
-        #fgmask = sp.gaussian_filter(fgmask, sigma = 2.7)
+        fgmask = sp.gaussian_filter(fgmask, sigma = 2.7)
         contours, _ = cv.findContours(fgmask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
         frame_copy = frame.copy()
         for c in contours:
