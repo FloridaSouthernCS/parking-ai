@@ -6,8 +6,8 @@ import cv2
 import os
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
-grab_path = os.path.join(main_path, "postprocess2")
-addr = os.path.join(grab_path, "test4.mp4")
+grab_path = os.path.join(main_path, "preprocess")
+addr = os.path.join(grab_path, "large_white_night.mp4")
 cap = cv2.VideoCapture(addr)
 
 
@@ -58,8 +58,9 @@ def dense_optical_flow(method, video_path, params=[], to_gray=True):
 
             # Convert HSV image into BGR for demo
             bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
-            cv2.imshow("frame", frame_copy)
-            cv2.imshow("optical flow", bgr)
+            window = np.hstack([frame_copy, bgr])
+            cv2.imshow("frame", window)
+            # cv2.imshow("optical flow", bgr)
             k = cv2.waitKey(25) & 0xFF
             if k == 27:
                 break

@@ -11,7 +11,7 @@ import pdb
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
 grab_path = os.path.join(main_path, "preprocess")
-addr = os.path.join(grab_path, "preprocess0.mp4")
+addr = os.path.join(grab_path, "large_white_night.mp4")
 save_path = os.path.join(main_path, "postprocess2")
 
 def main():
@@ -45,8 +45,10 @@ def main():
                 cv.putText(frame_copy, "car detected", (x,y-10), cv.FONT_HERSHEY_COMPLEX, 0.3, (0, 255, 0), 1, cv.LINE_AA)
         foregound_part = cv.bitwise_and(frame, frame, mask=fgmask)
         stacked = np.hstack((frame, foregound_part, frame_copy))
-        cv.imshow("", cv.resize(stacked, None, fx=0.5, fy=0.5))
-        cv.waitKey(100)
+        # cv.imshow("", cv.resize(stacked, None, fx=0.5, fy=0.5))
+        # cv.waitKey(100)
+        cv.imshow("", cv.resize(fgmask, None, fx=0.5, fy=0.5))
+        cv.waitKey(1)
 
         start_recording(foregound_part, frames)
     video.release()

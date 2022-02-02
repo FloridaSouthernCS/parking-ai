@@ -20,7 +20,7 @@ import scipy.ndimage as sp
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
 grab_path = os.path.join(main_path, "preprocess")
-addr = os.path.join(grab_path, "test2.mp4")
+addr = os.path.join(grab_path, "preprocess36.mp4")
 save_path = os.path.join(main_path, "postprocess")
 
 
