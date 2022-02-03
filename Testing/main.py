@@ -18,6 +18,12 @@ save_path = os.path.join(main_path, save_folder)
 keys_clicked = []
 valid_keys = []
 
+main_path = os.path.dirname(os.path.abspath(__file__)) 
+grab_path = os.path.join(main_path, "preprocess")
+addr = os.path.join(grab_path, "large_white_night.mp4")
+cap = cv2.VideoCapture(addr)
+
+
 def main():
     global valid_keys
     # Track what keys are pressed
@@ -27,8 +33,8 @@ def main():
     
     # Default Garden enterance IP
     addr = 'http://10.7.0.19/image4?res=half&quality=1&doublescan=0'
-    
-    pull_from_web(addr, keys_clicked)
+    addr = os.path.join(grab_path, "large_white_night.mp4")
+    pull_from_addr(addr, keys_clicked)
     
     
     # Saved mp4 examples 
@@ -158,7 +164,7 @@ def save_recording(frames):
         i += 1
 
 # Display the image
-def show_img(img, fps):
+def show_img(img, fps=0):
     
     window = cv2.resize(img, (600,400) )
     cv2.rectangle(window, (0,0), (80, 10), (127,127,127), -1)

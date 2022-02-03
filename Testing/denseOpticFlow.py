@@ -5,7 +5,7 @@ import os
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
 grab_path = os.path.join(main_path, "preprocess")
-addr = os.path.join(grab_path, "large_white_night.mp4")
+addr = os.path.join(grab_path, "preprocess11.mp4")
 cap = cv2.VideoCapture(addr)
 
 def draw_flow(img, flow, step=16):
@@ -60,7 +60,7 @@ while True:
     # start time to calculate FPS
     start = time.time()
 
-    flow = cv2.calcOpticalFlowFarneback(prevgray, gray, None, 0.5, 3, 15, 3, 5, 1.2, 0)
+    flow = cv2.calcOpticalFlowFarneback(prevgray, gray, None, 0.5, 20, 15, 3, 5, 1.2, 0)
     
     prevgray = gray
 
