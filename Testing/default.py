@@ -166,7 +166,7 @@ def save_recording(frames):
 # Display the image
 def show_img(img, fps=0):
     
-    window = cv2.resize(img, (600,400) )
+    window = cv2.resize(img, (img.shape[1]//2,img.shape[0]//2) )
     cv2.rectangle(window, (0,0), (80, 10), (127,127,127), -1)
     cv2.putText(window, "FPS: {}".format(fps), (0,10), cv2.FONT_HERSHEY_TRIPLEX, .5, (255, 255, 255), 1, 2)
     cv2.imshow('Video', window)

@@ -10,16 +10,16 @@ import scipy.ndimage as sp
 import pdb
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
-grab_path = os.path.join(main_path, "preprocess")
-addr = os.path.join(grab_path, "test16.mp4")
+grab_path = os.path.join(main_path, "Preprocess\\Inflow\\Car")
+addr = os.path.join(grab_path, "car2.mp4")
 save_path = os.path.join(main_path, "postprocess2")
 
 def main():
     video = cv.VideoCapture(addr)
 
-    kernel = None
+    kernel = np.ones((3, 3), np.uint8)
 
-    background_object = cv.createBackgroundSubtractorMOG2(varThreshold=100, detectShadows=True)
+    background_object = cv.createBackgroundSubtractorMOG2(varThreshold=10, detectShadows=True)
     frames = []
     while True:
         ret, frame = video.read()
@@ -27,11 +27,29 @@ def main():
             break
         
         fgmask = background_object.apply(frame)
+        fgmask = sp.gaussian_filter(fgmask, sigma = 4)
+        _, fgmask = cv.threshold(fgmask, 150, 255, cv.THRESH_BINARY)
         
-        _, fgmask = cv.threshold(fgmask, 250, 255, cv.THRESH_BINARY)
+        fgmask = cv.erode(fgmask, kernel=kernel, iterations=4)
+        fgmask = sp.gaussian_filter(fgmask, sigma = 4)
+        # fgmask = cv.dilate(fgmask, kernel=kernel, iterations=5)
         
-        fgmask = cv.erode(fgmask, kernel=kernel, iterations=3)
-        fgmask = cv.dilate(fgmask, kernel=kernel, iterations=10)
+        fgmask = cv.pyrDown(fgmask)
+        fgmask = cv.pyrDown(fgmask)
+        fgmask = cv.pyrDown(fgmask)
+        fgmask = cv.pyrDown(fgmask)
+        # fgmask = cv.pyrDown(fgmask)
+        # fgmask = cv.pyrDown(fgmask)
+        fgmask = cv.pyrUp(fgmask)
+        fgmask = cv.pyrUp(fgmask)
+        fgmask = cv.pyrUp(fgmask)
+        fgmask = cv.pyrUp(fgmask)
+        # fgmask = cv.pyrUp(fgmask)
+        # fgmask = cv.pyrUp(fgmask)
+        #fgmask = cv.dilate(fgmask, kernel=kernel, iterations=5)
+        a = 255*(((np.average(fgmask)*4)/255))
+        print(a)
+        _, fgmask = cv.threshold(fgmask, a, 255, cv.THRESH_BINARY)
         
         # cv.imshow("", fgmask)
         # cv.waitKey(1)
@@ -40,7 +58,7 @@ def main():
         frame_copy = frame.copy()
         for c in contours:
             # 
-            if cv.contourArea(c) > 16000:
+            if cv.contourArea(c) > 40000:
                 x, y, width, height = cv.boundingRect(c)
                 cv.rectangle(frame_copy, (x,y), (x+width, y+height), (0,0,255), 2)
                 cv.putText(frame_copy, "car detected", (x,y-10), cv.FONT_HERSHEY_COMPLEX, 0.3, (0, 255, 0), 1, cv.LINE_AA)
@@ -49,7 +67,7 @@ def main():
         cv.imshow("", cv.resize(stacked, None, fx=0.5, fy=0.5))
         cv.waitKey(100)
 
-        start_recording(foregound_part, frames)
+        #start_recording(foregound_part, frames)
     video.release()
     cv.destroyAllWindows()
     #save_recording(frames)
