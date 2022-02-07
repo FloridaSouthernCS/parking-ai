@@ -6,6 +6,8 @@ import time
 import numpy as np
 import denseOpticFlow
 import pdb
+import math
+import backsub_w_countour
 
 keys_clicked = []
 valid_keys = []
@@ -21,9 +23,9 @@ def main():
     # Change type of data to see other cases
     grab_path.format( type_of_data[data_ind] ) 
     )
-  background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=100, detectShadows=True)
+  background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=1000, detectShadows=True)
   for file in files:
-    
+    print("Filename: ", file)
     cap = cv2.VideoCapture(grab_path.format(type_of_data[data_ind] + "\\{}".format(file)))
     ret_a, frame_a = cap.read()
     
@@ -34,13 +36,24 @@ def main():
       # time.sleep(.05)
       gray = cv2.cvtColor(frame_a, cv2.COLOR_BGR2GRAY)
       
-      flow = cv2.calcOpticalFlowFarneback(prevgray, gray, None, 0.5, 10, 5, 3, 5, 1.2, 0)
-
+      flow = cv2.calcOpticalFlowFarneback(prevgray, gray, None, 0.5, 70, 30, 3, 5, 1.2, 0)
+      
       frame_c = denseOpticFlow.draw_flow(gray, flow, 50)
       frame_d = denseOpticFlow.draw_hsv(flow)
 
-      window = np.hstack([frame_a, frame_c, frame_d])
-      window = cv2.resize(window, dsize=(window.shape[1]//2, window.shape[0]//2) )
+      fgmask = backsub_w_countour.get_fgmask(background_object, frame_a)
+      
+      frame_e = cv2.bitwise_and(gray, gray, mask=fgmask)
+      frame_f =  backsub_w_countour.get_contours(gray, fgmask)
+      frame_e = cv2.cvtColor(frame_e, cv2.COLOR_GRAY2BGR)
+      frame_f = cv2.cvtColor(frame_f, cv2.COLOR_GRAY2BGR)
+      prevgray = gray
+      
+      window1 = np.hstack([frame_a, frame_c, frame_d])
+      window2 = np.hstack([frame_a, frame_e, frame_f])
+      window = np.vstack([window1, window2])
+      percent = .9
+      window = cv2.resize(window, dsize=( math.floor(window.shape[1]*percent), math.floor(window.shape[0]*percent)) )
       default.show_img(window, "Undetermined")
 
       ret_a, frame_a = cap.read()

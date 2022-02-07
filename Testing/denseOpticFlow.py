@@ -4,8 +4,8 @@ import time
 import os
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
-grab_path = os.path.join(main_path, "preprocess")
-addr = os.path.join(grab_path, "preprocess11.mp4")
+grab_path = os.path.join(main_path, "Preprocess\\Inflow\\Car")
+addr = os.path.join(grab_path, "car1.mp4")
 cap = cv2.VideoCapture(addr)
 
 def draw_flow(img, flow, step=16):
@@ -46,7 +46,7 @@ def draw_hsv(flow):
 
 
 
-# cap = cv2.VideoCapture(0)
+
 
 # suc, prev = cap.read()
 # prevgray = cv2.cvtColor(prev, cv2.COLOR_BGR2GRAY)

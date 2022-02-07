@@ -10,8 +10,8 @@ import scipy.ndimage as sp
 import pdb
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
-grab_path = os.path.join(main_path, "preprocess")
-addr = os.path.join(grab_path, "large_white_night.mp4")
+grab_path = os.path.join(main_path, "Preprocess\\Inflow\\Car")
+addr = os.path.join(grab_path, "car11.mp4")
 save_path = os.path.join(main_path, "postprocess2")
 
 def main():
@@ -19,45 +19,53 @@ def main():
 
     kernel = None
 
-    background_object = cv.createBackgroundSubtractorMOG2(varThreshold=900, detectShadows=True)
+    background_object = cv.createBackgroundSubtractorMOG2(varThreshold=200, detectShadows=True)
     frames = []
     while True:
         ret, frame = video.read()
         if not ret:
             break
-        fgmask = sp.gaussian_filter(frame, sigma = 4)
-        fgmask = background_object.apply(fgmask)
         
-        fgmask = sp.gaussian_filter(fgmask, sigma = 4)
-        _, fgmask = cv.threshold(fgmask, 127, 255, cv.THRESH_BINARY)
 
-        fgmask = cv.erode(fgmask, kernel=kernel, iterations=6)
-        fgmask = cv.dilate(fgmask, kernel=kernel, iterations=30)
-        # cv.imshow("", fgmask)
-        # cv.waitKey(1)
-        fgmask = sp.gaussian_filter(fgmask, sigma = 2.7)
-        contours, _ = cv.findContours(fgmask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-        frame_copy = frame.copy()
-        for c in contours:
-            if cv.contourArea(c) > 8000:
-                x, y, width, height = cv.boundingRect(c)
-                cv.rectangle(frame_copy, (x,y), (x+width, y+height), (0,0,255), 2)
-                cv.putText(frame_copy, "car detected", (x,y-10), cv.FONT_HERSHEY_COMPLEX, 0.3, (0, 255, 0), 1, cv.LINE_AA)
+        fgmask = get_fgmask(background_object, frame)
+        
+        contour_frame = get_contours(frame, fgmask)
+
         foregound_part = cv.bitwise_and(frame, frame, mask=fgmask)
-        stacked = np.hstack((frame, foregound_part, frame_copy))
-        # cv.imshow("", cv.resize(stacked, None, fx=0.5, fy=0.5))
-        # cv.waitKey(100)
-        cv.imshow("", cv.resize(fgmask, None, fx=0.5, fy=0.5))
-        cv.waitKey(1)
 
-        start_recording(foregound_part, frames)
+        stacked = np.hstack((frame, foregound_part, contour_frame))
+
+        cv.imshow("", cv.resize(stacked, None, fx=0.5, fy=0.5))
+        cv.waitKey(50)
+        
     video.release()
-    cv.destroyAllWindows()
-    #save_recording(frames)
-
-
+    
     
 
+
+def get_contours(frame, fgmask):
+    contours, _ = cv.findContours(fgmask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    contour_frame = frame.copy()
+    for c in contours:
+        if cv.contourArea(c) > 40000:
+            x, y, width, height = cv.boundingRect(c)
+            cv.rectangle(contour_frame, (x,y), (x+width, y+height), (0,0,255), 2)
+            cv.putText(contour_frame, "car detected", (x,y-10), cv.FONT_HERSHEY_COMPLEX, 0.3, (0, 255, 0), 1, cv.LINE_AA)
+    return contour_frame
+
+def get_fgmask(subtractor, frame ):
+    fgmask = sp.gaussian_filter(frame, sigma = 4)
+    fgmask = subtractor.apply(frame)
+    fgmask = cv.erode(fgmask, kernel=(10,10), iterations=2)
+    fgmask = sp.gaussian_filter(fgmask, sigma = 4)
+    _, fgmask = cv.threshold(fgmask, 50, 255, cv.THRESH_BINARY)
+
+    fgmask = cv.dilate(fgmask, kernel=None, iterations=20)
+    # cv.imshow("", fgmask)
+    # cv.waitKey(1)
+    fgmask = sp.gaussian_filter(fgmask, sigma = 2.7)
+
+    return fgmask
 
 # Modify array of frames
 def start_recording(img, frames):
@@ -73,4 +81,5 @@ def save_recording(frames):
     imageio.mimwrite(os.path.join(save_path,'test4.mp4'), frames , fps = 2)
     print("Recording saved as '{}'".format('test4.mp4'))
 
-main()
+if __name__ == "__main__":
+    main()
