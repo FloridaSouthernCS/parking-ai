@@ -6,8 +6,8 @@ import cv2
 import os
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
-grab_path = os.path.join(main_path, "preprocess")
-addr = os.path.join(grab_path, "large_white_night.mp4")
+grab_path = os.path.join(main_path, "Preprocess\\Inflow\\Car")
+addr = os.path.join(grab_path, "car1.mp4")
 cap = cv2.VideoCapture(addr)
 
 

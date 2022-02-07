@@ -20,7 +20,7 @@ def main():
   files = os.listdir( 
     # Change type of data to see other cases
     grab_path.format( type_of_data[data_ind] ) 
-    )[::-1]
+    )
   background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=100, detectShadows=True)
   for file in files:
     
@@ -30,18 +30,20 @@ def main():
     prevgray = cv2.cvtColor(frame_a, cv2.COLOR_BGR2GRAY)
     while ret_a:
 
-      ret_a, frame_a = cap.read()
+      
       # time.sleep(.05)
       gray = cv2.cvtColor(frame_a, cv2.COLOR_BGR2GRAY)
       
-      flow = cv2.calcOpticalFlowFarneback(prevgray, gray, None, 0.5, 40, 10, 3, 5, 1.2, 0)
+      flow = cv2.calcOpticalFlowFarneback(prevgray, gray, None, 0.5, 10, 5, 3, 5, 1.2, 0)
 
       frame_c = denseOpticFlow.draw_flow(gray, flow, 50)
       frame_d = denseOpticFlow.draw_hsv(flow)
 
-      window = np.vstack([frame_a, frame_c, frame_d])
-      
-      default.show_img(frame_d, "Undetermined")
+      window = np.hstack([frame_a, frame_c, frame_d])
+      window = cv2.resize(window, dsize=(window.shape[1]//2, window.shape[0]//2) )
+      default.show_img(window, "Undetermined")
+
+      ret_a, frame_a = cap.read()
       
       
 
