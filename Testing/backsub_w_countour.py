@@ -58,9 +58,9 @@ def get_fgmask(subtractor, frame ):
     fgmask = subtractor.apply(frame)
     fgmask = cv.erode(fgmask, kernel=(10,10), iterations=2)
     fgmask = sp.gaussian_filter(fgmask, sigma = 4)
-    _, fgmask = cv.threshold(fgmask, 50, 255, cv.THRESH_BINARY)
+    _, fgmask = cv.threshold(fgmask, 150, 255, cv.THRESH_BINARY)
 
-    fgmask = cv.dilate(fgmask, kernel=None, iterations=20)
+    fgmask = cv.dilate(fgmask, kernel=None, iterations=30)
     # cv.imshow("", fgmask)
     # cv.waitKey(1)
     fgmask = sp.gaussian_filter(fgmask, sigma = 2.7)

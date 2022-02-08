@@ -16,20 +16,23 @@ main_path = os.path.dirname(os.path.abspath(__file__))
 grab_path = os.path.join(main_path, "Preprocess\\Inflow\\{}")
 
 def main():
-  type_of_data = ['Car', 'Not_Car', 'Combo']
-  data_ind = 0
+  type_of_data = ['Car', 'Not_Car', 'Combo', 'Demo']
+  data_ind = 3
 
   files = os.listdir( 
     # Change type of data to see other cases
     grab_path.format( type_of_data[data_ind] ) 
     )
-  background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=1000, detectShadows=True)
+  
   for file in files:
+    background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=500, detectShadows=True)
     print("Filename: ", file)
     cap = cv2.VideoCapture(grab_path.format(type_of_data[data_ind] + "\\{}".format(file)))
     ret_a, frame_a = cap.read()
     
     prevgray = cv2.cvtColor(frame_a, cv2.COLOR_BGR2GRAY)
+    ret_a, frame_a = cap.read()
+    gray = cv2.cvtColor(frame_a, cv2.COLOR_BGR2GRAY)
     while ret_a:
 
       
@@ -47,7 +50,7 @@ def main():
       frame_f =  backsub_w_countour.get_contours(gray, fgmask)
       frame_e = cv2.cvtColor(frame_e, cv2.COLOR_GRAY2BGR)
       frame_f = cv2.cvtColor(frame_f, cv2.COLOR_GRAY2BGR)
-      prevgray = gray
+      
       
       window1 = np.hstack([frame_a, frame_c, frame_d])
       window2 = np.hstack([frame_a, frame_e, frame_f])
@@ -55,7 +58,7 @@ def main():
       percent = .9
       window = cv2.resize(window, dsize=( math.floor(window.shape[1]*percent), math.floor(window.shape[0]*percent)) )
       default.show_img(window, "Undetermined")
-
+      prevgray = gray
       ret_a, frame_a = cap.read()
       
       

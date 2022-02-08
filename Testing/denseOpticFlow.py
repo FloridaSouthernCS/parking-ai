@@ -19,11 +19,11 @@ def draw_flow(img, flow, step=16):
     lines = np.int32(lines + 0.5)
 
     img_bgr = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-    cv2.polylines(img_bgr, lines, 0, (0, 255, 0))
-
+    cv2.polylines(img_bgr, lines, 0, (0, 255, 0), 4)
+    
     for (x1, y1), (_x2, _y2) in lines:
-        cv2.circle(img_bgr, (x1, y1), 1, (0, 255, 0), -1)
-
+        cv2.circle(img_bgr, (x1, y1), 5, (0, 255, 0), -1)
+        
     return img_bgr
 
 
