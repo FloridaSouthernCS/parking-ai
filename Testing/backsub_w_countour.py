@@ -10,7 +10,9 @@ import scipy.ndimage as sp
 import pdb
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
-grab_path = os.path.join(main_path, "Preprocess\\Inflow\\Car")
+# grab_path = os.path.join(main_path, "Preprocess\\Inflow\\Car")
+grab_path = os.path.join(main_path, "Preprocess", "Inflow", "Car")
+
 addr = os.path.join(grab_path, "car11.mp4")
 save_path = os.path.join(main_path, "postprocess2")
 
