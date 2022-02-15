@@ -4,10 +4,11 @@ import time
 import numpy as np
 import cv2
 import os
+import math
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
 grab_path = os.path.join(main_path, "Preprocess\\Inflow\\Car")
-addr = os.path.join(grab_path, "car1.mp4")
+addr = os.path.join(grab_path, "car9.mp4")
 cap = cv2.VideoCapture(addr)
 
 
@@ -33,7 +34,7 @@ def dense_optical_flow(method, video_path, params=[], to_gray=True):
         
 
         time_elapsed = time.time() - prev
-        res, image = cap.read()
+        
 
         if time_elapsed > 1./frame_rate:
             prev = time.time()
@@ -59,11 +60,12 @@ def dense_optical_flow(method, video_path, params=[], to_gray=True):
             # Convert HSV image into BGR for demo
             bgr = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
             window = np.hstack([frame_copy, bgr])
+            percent = .5
+            window = cv2.resize(window, dsize=( math.floor(window.shape[1]*percent), math.floor(window.shape[0]*percent)) )
             cv2.imshow("frame", window)
             # cv2.imshow("optical flow", bgr)
-            k = cv2.waitKey(25) & 0xFF
-            if k == 27:
-                break
+            k = cv2.waitKey(1)
+           
 
             # Update the previous frame
             old_frame = new_frame
@@ -72,7 +74,7 @@ def dense_optical_flow(method, video_path, params=[], to_gray=True):
 
 
 def main():
-    dense_optical_flow(cv2.calcOpticalFlowFarneback, 'sample3.mp4',[0.5, 10, 10, 3, 10, 1.2, 0])
+    dense_optical_flow(cv2.calcOpticalFlowFarneback, 'sample3.mp4',[0.5, 10, 20, 15, 10, 1.2, 0])
     cv2.calcOpticalFlowFarneback()
 
 main()

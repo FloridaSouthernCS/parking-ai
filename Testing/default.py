@@ -143,7 +143,7 @@ def start_recording(img, frames):
 
 # Save frames to mp4 file
 def save_recording(frames):
-    global keys_clicked
+    #global keys_clicked
     
     filenames = []
     for filename in os.listdir(save_path):
@@ -159,7 +159,7 @@ def save_recording(frames):
             print("Saving recording...")
             print("Recording saved as '{}'".format(file_format))
             frames = []
-            keys_clicked.remove('s')
+            #keys_clicked.remove('s')
             return frames
             
         i += 1

@@ -8,6 +8,7 @@ import denseOpticFlow
 import pdb
 import math
 import backsub_w_countour
+import default
 
 keys_clicked = []
 valid_keys = []
@@ -18,6 +19,8 @@ grab_path = os.path.join(main_path, "Preprocess\\Inflow\\{}")
 def main():
   type_of_data = ['Car', 'Not_Car', 'Combo', 'Demo']
   data_ind = 3
+
+  frames = []
 
   files = os.listdir( 
     # Change type of data to see other cases
@@ -55,12 +58,14 @@ def main():
       window1 = np.hstack([frame_a, frame_c, frame_d])
       window2 = np.hstack([frame_a, frame_e, frame_f])
       window = np.vstack([window1, window2])
-      percent = .9
+      percent = .8
       window = cv2.resize(window, dsize=( math.floor(window.shape[1]*percent), math.floor(window.shape[0]*percent)) )
-      default.show_img(window, "Undetermined")
+      #default.show_img(window, "Undetermined")
       prevgray = gray
       ret_a, frame_a = cap.read()
       
+      default.start_recording(window, frames)
+  default.save_recording(frames)
       
 
 

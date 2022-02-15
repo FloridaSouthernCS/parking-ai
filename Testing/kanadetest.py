@@ -4,8 +4,8 @@ import cv2
 import os
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
-grab_path = os.path.join(main_path, "postprocess2")
-addr = os.path.join(grab_path, "test4.mp4")
+grab_path = os.path.join(main_path, "Preprocess\\Inflow\\Combo")
+addr = os.path.join(grab_path, "combo2.mp4")
 cap = cv2.VideoCapture(addr)
   
 # params for corner detection
@@ -25,59 +25,6 @@ color = np.random.randint(0, 255, (100, 3))
   
 # Take first frame and find corners in it
 ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-ret, old_frame = cap.read()
-
-
-
 
 old_gray = cv2.cvtColor(old_frame,
                         cv2.COLOR_BGR2GRAY)
@@ -144,6 +91,7 @@ while(1):
     # Updating Previous frame and points 
     old_gray = frame_gray.copy()
     p0 = good_new.reshape(-1, 1, 2)
+    
   
 cv2.destroyAllWindows()
 cap.release()
