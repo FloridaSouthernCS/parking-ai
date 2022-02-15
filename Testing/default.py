@@ -1,5 +1,5 @@
 
-import enum
+# import enum
 import cv2
 import time
 from PIL import Image
@@ -13,15 +13,16 @@ import keyboard
 import matplotlib.pyplot as plt
 
 main_path = os.path.dirname(os.path.abspath(__file__))
+pdb.set_trace()
 save_folder = "preprocess"
 save_path = os.path.join(main_path, save_folder)
 keys_clicked = []
 valid_keys = []
 
-main_path = os.path.dirname(os.path.abspath(__file__)) 
-grab_path = os.path.join(main_path, "preprocess")
-addr = os.path.join(grab_path, "large_white_night.mp4")
-cap = cv2.VideoCapture(addr)
+# main_path = os.path.dirname(os.path.abspath(__file__)) 
+# grab_path = os.path.join(main_path, "preprocess")
+# addr = os.path.join(grab_path, "large_white_night.mp4")
+# cap = cv2.VideoCapture(addr)
 
 
 def main():
@@ -33,7 +34,7 @@ def main():
     
     # Default Garden enterance IP
     addr = 'http://10.7.0.19/image4?res=half&quality=1&doublescan=0'
-    addr = os.path.join(grab_path, "large_white_night.mp4")
+    # addr = os.path.join(grab_path, "large_white_night.mp4")
     pull_from_addr(addr, keys_clicked)
     
     
