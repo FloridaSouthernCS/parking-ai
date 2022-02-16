@@ -1,10 +1,12 @@
 # backsub_w_contour.py
 import cv2 
 import os
-import numpy as np
 import scipy.ndimage as sp
 import pdb
+import numpy as np 
 
+
+# FILEPATHS 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
 datapath = os.path.join(main_path, "Data", "Inflow")
 
@@ -14,7 +16,28 @@ not_car_path = os.path.join(datapath, "Not_Car")
 
 addr = os.path.join(car_path, "car11.mp4")
 
+
+# PARAMETERS
 VAR_THRESHOLD = 200 # BACKGROUND SUB PARAMETER
+
+CONTOUR_THRESHOLD = 40000 # COUNTOR THRESHOLD FOR CONTOUR AREA
+
+
+# KANADE PARAMETERS
+# params for corner detection
+feature_params = dict( maxCorners = 50,
+                       qualityLevel = 0.3,
+                       minDistance = 7,
+                       blockSize = 7 )
+  
+# Parameters for lucas kanade optical flow
+lk_params = dict( winSize = (15, 15),
+                  maxLevel = 2,
+                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
+                              10, 0.03))
+  
+# Create some random colors
+color = np.random.randint(0, 255, (100, 3))
 
 
 '''This method applies Background Subtraction 
@@ -25,35 +48,116 @@ def back_sub(frame, background_object):
 
     fgmask = background_object.apply(frame) # apple background subtraction to frame 
     _, fgmask = cv2.threshold(fgmask, 150, 255, cv2.THRESH_BINARY) # grab just the blacker parts of teh fgmask 
-    foregound_part = cv2.bitwise_and(frame, frame, mask=fgmask) # show frame in areas in motion
+    foregound = cv2.bitwise_and(frame, frame, mask=fgmask) # show frame in areas in motion
 
-    return foregound_part
+    return fgmask, foregound
 
 
     # OTHER METHODS
     # sp.gaussian_filter(frame, sigma = 4) # blur
     # cv2.erode(fgmask, kernel=(10,10), iterations=2) # erode
     # _, fgmask = cv2.threshold(fgmask, 150, 255, cv2.THRESH_BINARY) # apply threshold
-    # fgmask = cv2.dilate(fgmask, kernel=None, iterations=30) # dilate 
+    # fgmask = cv2.dilate(fgmask, kernel=None, iterations=30) # dilate
+
+ 
+'''This method draws the rectangles around areas of detected motion
+PARAMETERS: 
+- frame: frame from the video
+- fgmask: foreground mask to show which areas motion was detected '''
+def contour(frame, fgmask):
+
+    contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
+    contour_frame = frame.copy()
+
+    for c in contours: # for each contour found 
+        if cv2.contourArea(c) > CONTOUR_THRESHOLD: # if the countour area is above a # 
+
+            # draw a rectangle 
+            x, y, width, height = cv2.boundingRect(c)
+            cv2.rectangle(contour_frame, (x,y - 10), (x + width, y + height), (0,0,255), 2)
+            cv2.putText(contour_frame, "car detected", (x,y), cv2.FONT_HERSHEY_COMPLEX, 0.3, (0, 255, 0), 1, cv2.LINE_AA)
+
+    return contour_frame 
+
+def feature_detection():
+    pass
+
+def clustering():
+    pass
+
+def kanade_initial(cap, ):
+    # Take first frame and find corners in it
+    ret, old_frame = cap.read()
+    ret, old_frame = cap.read()
+    ret, old_frame = cap.read()
+    ret, old_frame = cap.read()
+    ret, old_frame = cap.read()
+    ret, old_frame = cap.read()
+    ret, old_frame = cap.read()
+    ret, old_frame = cap.read()
+    ret, old_frame = cap.read()
+
+    old_gray = cv2.cvtColor(old_frame,
+                            cv2.COLOR_BGR2GRAY)
+
+    p0 = cv2.goodFeaturesToTrack(old_gray, mask = None,
+                                **feature_params)
+
+    # Create a mask image for drawing purposes
+    mask = np.zeros_like(old_frame)
+    return old_gray, p0, mask 
+
+def kanade(cap, old_gray, p0, mask):
+    ret, frame = cap.read()
+    frame_gray = cv2.cvtColor(frame,
+                              cv2.COLOR_BGR2GRAY)
+    
+    # calculate optical flow
+    p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray,
+                                           frame_gray,
+                                           p0, None,
+                                           **lk_params)
+    
+    # Select good points
+    try:
+        good_new = p1[st == 1]
+        good_old = p0[st == 1]
+    except Exception as e:
+        pass
+    
+    
+    # draw the tracks
+    for i, (new, old) in enumerate(zip(good_new, 
+                                       good_old)):
+        a, b = new.ravel()
+        f, d = old.ravel()
+        mask = cv2.line(mask, (int(a), int(b)), (int(f), int(d)),
+                        color[i].tolist(), 2)
+          
+        frame = cv2.circle(frame, (int(a), int(b)), 5,
+                           color[i].tolist(), -1)
+
+    return cv2.add(frame, mask)
 
     
-    
 def main():
-    vid = cv2.VideoCapture(addr)
+    cap = cv2.VideoCapture(addr)
 
     background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=VAR_THRESHOLD, detectShadows=True) 
 
     while True:
-        ret, frame = vid.read()
+        ret, frame = cap.read()
         if not ret:
             break
         
-        foregound_part = back_sub(frame, background_object)
+        fgmask, foregound = back_sub(frame, background_object)
+        contour_frame = contour(frame, fgmask)
 
-        cv2.imshow("", foregound_part)
+        # cv2.imshow("", foregound)
+        cv2.imshow("", contour_frame)
         cv2.waitKey(50)
         
-    vid.release()
+    cap.release()
 
     
 
