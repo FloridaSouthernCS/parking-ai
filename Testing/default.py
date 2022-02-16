@@ -11,6 +11,7 @@ import pdb
 import imageio
 import keyboard
 import matplotlib.pyplot as plt
+import pynput
 
 main_path = os.path.dirname(os.path.abspath(__file__))
 pdb.set_trace()
