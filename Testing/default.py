@@ -11,7 +11,7 @@ import pdb
 import imageio
 import keyboard
 import matplotlib.pyplot as plt
-import pynput
+from pynput import Key, Listener
 
 main_path = os.path.dirname(os.path.abspath(__file__))
 pdb.set_trace()
@@ -184,10 +184,24 @@ def request_img(request, verbose=0):
     return feed
 
 # Check if a key was clicked
-def check_key(valid_keys):
+def check_key():
+    with Listener(
+            on_press=on_press
+            ) as listener:
+        listener.join()
+    
+    
+def on_press(key):
     global keys_clicked
-    for i in range(len(valid_keys)):
-        keyboard.on_press_key(valid_keys[i], lambda output:keys_clicked.append(output.name))
+    global valid_keys
+        
+    try:
+        if key.char in valid_keys:
+            keys_clicked.append(key)
+            print(keys_clicked, " clicked")
+    except print(0):
+        pass
+
 
 if __name__ == "__main__":
     main()
