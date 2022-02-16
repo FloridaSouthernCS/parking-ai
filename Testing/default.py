@@ -9,12 +9,10 @@ from io import BytesIO
 import os 
 import pdb
 import imageio
-import keyboard
 import matplotlib.pyplot as plt
-from pynput import Key, Listener
+from pynput.keyboard import Listener
 
 main_path = os.path.dirname(os.path.abspath(__file__))
-pdb.set_trace()
 save_folder = "preprocess"
 save_path = os.path.join(main_path, save_folder)
 keys_clicked = []
@@ -30,7 +28,7 @@ def main():
     global valid_keys
     # Track what keys are pressed
     valid_keys += ['r', 's', 'q', 'd']
-    check_key(valid_keys)
+    check_key()
     
     
     # Default Garden enterance IP
