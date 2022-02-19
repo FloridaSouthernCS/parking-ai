@@ -1,4 +1,5 @@
 # backsub_w_contour.py
+from operator import xor
 import cv2 
 import os
 import scipy.ndimage as sp
@@ -6,7 +7,7 @@ import pdb
 import numpy as np 
 import tkinter as tk
 import math
-
+import key_log
 
 '''
     Document conventions:
@@ -55,12 +56,20 @@ screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
 
 def main():
+    # Create key_log object to control what video is processed
+    print("Controls: ")
+    print("  s: Start/Stop")
+    # print("  a: Previous")
+    # print("  d: Next")
+    logger = key_log.log(['s'])
+    logger.start()
+
     # Get Video from mp4 source
     cap = cv2.VideoCapture(addr)
-
+    
     # Get R.O.I. tool
     background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=VAR_THRESHOLD, detectShadows=True) 
-
+    
     while True:
 
         display_frames = []
@@ -121,9 +130,10 @@ def main():
         cv2.imshow("", window)
         cv2.waitKey(50)
         
+        check_log(logger)
+        
+        
     cap.release()
-
-
 
 
 '''This method applies Background Subtraction 
@@ -177,15 +187,45 @@ def track_features(initial_frame, frame):
 def track_clusters(initial_frame, frame):
     return None, None
 
-def format_window(frames, max_h_frames, width):
+
+'''This method is used to format the final output window
+PARAMETERS: 
+- frames: a list of all the frames which are to be displayed
+- max_h_frames: maximum horizontal frames to be displayed
+- mad_width: maximum desired pixel width for the output window '''
+def format_window(frames, max_h_frames, max_width):
+
     window = np.hstack(frames[:])
-    percent = .2
-    window = cv2.resize(window, dsize=(math.floor(window.shape[1]*percent), math.floor(window.shape[0]*percent) ) )
+
+    ratio = window.shape[0]/window.shape[1]
+    
+    window = cv2.resize(window, dsize=(math.floor( max_width ), math.floor( max_width*ratio )) )
+    
     return window
         
 
-
+'''This method acts as a controller to manipulate the video feed
+PARAMETERS: 
+- logger: log object from key_log.py '''
+def check_log(logger):
     
+    if logger.keys_clicked:
+        key = logger.keys_clicked[-1]
+        
+        if key in logger.valid_keys:
+            
+            if key == 's':
+                logger.keys_clicked.append(None)
+                key = logger.keys_clicked[-1]
+                while 's' != key:
+                    key = logger.keys_clicked[-1]
+                    
+                    cv2.waitKey(50)
+                logger.keys_clicked.append(None)
+            else:
+                print("The key {" + key + "} has not been set up. Set up this key in 'check_log'")
+
+
 
 
 if __name__ == "__main__":
