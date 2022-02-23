@@ -25,13 +25,13 @@ car_path = os.path.join(datapath, "Car")
 combo_path = os.path.join(datapath, "Combo")
 not_car_path = os.path.join(datapath, "Not_Car")
 
-addr = os.path.join(car_path, "car11.mp4")
+addr = os.path.join(combo_path, "combo5.mp4")
 
 
 # PARAMETERS
-VAR_THRESHOLD = 200 # BACKGROUND SUB PARAMETER
+VAR_THRESHOLD = 50 # BACKGROUND SUB PARAMETER
 
-CONTOUR_THRESHOLD = 40000 # COUNTOR THRESHOLD FOR CONTOUR AREA
+CONTOUR_THRESHOLD = 5000 # COUNTOR THRESHOLD FOR CONTOUR AREA
 
 
 # KANADE PARAMETERS
@@ -121,7 +121,7 @@ def main():
 
         '''Display output in a practical way'''
 
-        display_frames = np.array([frame, frame, frame, frame, frame, frame, frame])
+        display_frames = np.array([frame, backsub_frame, contour_frame])
 
         max_h_frames = 3
         window = format_window(display_frames, max_h_frames, screen_width)
@@ -131,8 +131,9 @@ def main():
         cv2.waitKey(50)
         
         check_log(logger)
-        
-        
+
+    logger.stop()
+    cv2.destroyAllWindows()
     cap.release()
 
 
@@ -165,13 +166,15 @@ def contour_detection(frame, fgmask):
     contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
     contour_frame = frame.copy()
 
-    for c in contours: # for each contour found 
-        if cv2.contourArea(c) > CONTOUR_THRESHOLD: # if the countour area is above a # 
+    for i in range(len(contours)): # for each contour found 
+        if cv2.contourArea(contours[i]) > CONTOUR_THRESHOLD: # if the countour area is above a # 
 
-            # draw a rectangle 
-            x, y, width, height = cv2.boundingRect(c)
-            cv2.rectangle(contour_frame, (x,y - 10), (x + width, y + height), (0,0,255), 2)
-            cv2.putText(contour_frame, "car detected", (x,y), cv2.FONT_HERSHEY_COMPLEX, 0.3, (0, 255, 0), 1, cv2.LINE_AA)
+            cv2.drawContours(contour_frame, contours, i, (0,255,0), 3)
+
+            # # draw a rectangle 
+            # x, y, width, height = cv2.boundingRect(contours[i])
+            # cv2.rectangle(contour_frame, (x,y - 10), (x + width, y + height), (0,0,255), 2)
+            # cv2.putText(contour_frame, "car detected", (x,y), cv2.FONT_HERSHEY_COMPLEX, 0.3, (0, 255, 0), 1, cv2.LINE_AA)
 
     return None, contour_frame 
 
