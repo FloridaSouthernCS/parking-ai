@@ -1,4 +1,5 @@
 # backsub_w_contour.py
+from logging import captureWarnings
 from operator import xor
 import cv2 
 import os
@@ -90,6 +91,12 @@ def main():
         contour_crop, contour_frame = contour_detection(frame, backsub_mask)
         display_frames.append(contour_frame) 
 
+        contour_crop2, contour_frame2 = contour_approx(frame, backsub_mask)
+        display_frames.append(contour_frame2) 
+
+        contour_crop3, contour_frame3 = contour_hull(frame, backsub_mask)
+        display_frames.append(contour_frame3) 
+
 
         '''Feature Detection with Kernel Convolution'''
         # Get array of points where Kernel Convolution was most effective
@@ -121,7 +128,7 @@ def main():
 
         '''Display output in a practical way'''
 
-        display_frames = np.array([frame, backsub_frame, contour_frame])
+        display_frames = np.array([frame, backsub_frame, contour_frame, contour_frame2, contour_frame3])
 
         max_h_frames = 3
         window = format_window(display_frames, max_h_frames, screen_width)
@@ -134,6 +141,8 @@ def main():
 
     logger.stop()
     cv2.destroyAllWindows()
+        
+    cv2.destroyAllWindows() 
     cap.release()
 
 
@@ -177,6 +186,28 @@ def contour_detection(frame, fgmask):
             # cv2.putText(contour_frame, "car detected", (x,y), cv2.FONT_HERSHEY_COMPLEX, 0.3, (0, 255, 0), 1, cv2.LINE_AA)
 
     return None, contour_frame 
+
+def contour_approx(frame, fgmask):
+    contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
+    contour_frame = frame.copy()
+
+    for c in contours:
+        if cv2.contourArea(c) > CONTOUR_THRESHOLD:
+            epsilon = 0.01*cv2.arcLength(c, True)
+            approx = cv2.approxPolyDP(c, epsilon, True)
+            cv2.drawContours(contour_frame, [approx], 0, (0, 255, 0), 3)
+    return None, contour_frame
+def contour_hull(frame, fgmask):
+    contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
+    contour_frame = frame.copy()
+
+    for c in contours:
+        if cv2.contourArea(c) > CONTOUR_THRESHOLD:
+            hull = cv2.convexHull(c)
+            cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), 2)
+    
+    return None, contour_frame
+
 
 def feature_detection(initial_frame, frame):
     return None, None
