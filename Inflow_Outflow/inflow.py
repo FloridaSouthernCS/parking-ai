@@ -31,13 +31,13 @@ car_path = os.path.join(datapath, "Car")
 combo_path = os.path.join(datapath, "Combo")
 not_car_path = os.path.join(datapath, "Not_Car")
 
-addr = os.path.join(combo_path, "combo5.mp4")
+addr = os.path.join(not_car_path, "not_car10.mp4")
 
 
 # PARAMETERS
 VAR_THRESHOLD = 100 # BACKGROUND SUB PARAMETER
 
-CONTOUR_THRESHOLD = 10000 # COUNTOR THRESHOLD FOR CONTOUR AREA
+CONTOUR_THRESHOLD = 5000 # COUNTOR THRESHOLD FOR CONTOUR AREA
 
 
 # KANADE PARAMETERS
@@ -135,11 +135,9 @@ def main():
                 - If a feature has motion that deviates from it's cluster too much, it should be discarded as a feature worth tracking
                 
             '''
-
-
             
             
-            display_frames = np.asarray([frame, backsub_frame, contour_frame, contour_frame2, contour_frame3])
+            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, contour_frame2, contour_frame3])
 
             
 
@@ -209,9 +207,8 @@ def apply_pyramids(frame, iterations):
     for i in range(iterations):
         pyrFrame = cv2.pyrUp(pyrFrame)
      
-    
-
     return pyrFrame
+    
  
 '''This method draws the rectangles around areas of detected motion
 PARAMETERS: 
