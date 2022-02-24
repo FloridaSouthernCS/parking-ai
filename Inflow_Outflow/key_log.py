@@ -26,9 +26,9 @@ def on_press(key, self):
         try:
             if valid_keys == "":
                 keys_clicked.append(key.char)
-                print(keys_clicked[-1], "clicked")
+                # print(keys_clicked[-1], "clicked")
             elif key.char in valid_keys:
                 keys_clicked.append(key.char)
-                print(keys_clicked[-1], "clicked")
+                # print(keys_clicked[-1], "clicked")
         except Exception as e:
             pass

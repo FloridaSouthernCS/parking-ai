@@ -9,6 +9,7 @@ import numpy as np
 import tkinter as tk
 import math
 import key_log
+import record
 
 '''
     Document conventions:
@@ -20,6 +21,10 @@ import key_log
 
 # FILEPATHS 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
+
+save_folder = "Inflow_Results"
+save_path = os.path.join(main_path, save_folder)
+
 datapath = os.path.join(main_path, "Data", "Inflow")
 
 car_path = os.path.join(datapath, "Car")
@@ -30,9 +35,9 @@ addr = os.path.join(combo_path, "combo5.mp4")
 
 
 # PARAMETERS
-VAR_THRESHOLD = 50 # BACKGROUND SUB PARAMETER
+VAR_THRESHOLD = 100 # BACKGROUND SUB PARAMETER
 
-CONTOUR_THRESHOLD = 5000 # COUNTOR THRESHOLD FOR CONTOUR AREA
+CONTOUR_THRESHOLD = 10000 # COUNTOR THRESHOLD FOR CONTOUR AREA
 
 
 # KANADE PARAMETERS
@@ -60,88 +65,109 @@ def main():
     # Create key_log object to control what video is processed
     print("Controls: ")
     print("  s: Start/Stop")
+    print("  r: Record Start/Pause")
     # print("  a: Previous")
     # print("  d: Next")
-    logger = key_log.log(['s'])
+    logger = key_log.log(['s', 'r', 'q'])
     logger.start()
 
     # Get Video from mp4 source
     cap = cv2.VideoCapture(addr)
-    
+
+    frames = []
+    recording = False
+
     # Get R.O.I. tool
     background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=VAR_THRESHOLD, detectShadows=True) 
     
-    while True:
-
-        display_frames = []
-
-        '''Extract image from input mp4 video file'''
-        ret, frame = cap.read()
-        if not ret: break
-        display_frames.append(frame) 
-
-        '''Background subtraction to detect motion'''
-        # Get binary mask of movement
-        backsub_mask, backsub_frame = back_sub(frame, background_object)
-        display_frames.append(backsub_frame) 
-
-
-        '''Contour Detection with threshold to find reigons of interest'''
-        # Get an enhanced mask by thresholding reigons of interest by sizes of white pixel areas
-        contour_crop, contour_frame = contour_detection(frame, backsub_mask)
-        display_frames.append(contour_frame) 
-
-        contour_crop2, contour_frame2 = contour_approx(frame, backsub_mask)
-        display_frames.append(contour_frame2) 
-
-        contour_crop3, contour_frame3 = contour_hull(frame, backsub_mask)
-        display_frames.append(contour_frame3) 
-
-
-        '''Feature Detection with Kernel Convolution'''
-        # Get array of points where Kernel Convolution was most effective
-        features, features_frame = feature_detection(frame, contour_crop)
-        display_frames.append(features_frame) 
-
-
-        '''Feature Segmentation using Clustering'''
-        # Segment the features into clusters to best imply the existence of individual vehicles
-        clusters, clustering_frame = clustering(frame, features)
-        display_frames.append(clustering_frame) 
-
-
-        '''Feature Motion using Optic Flow'''
-        # Track the motion of each feature
-        feature_motions, feature_motions_frame = track_features(frame, clusters)
-        display_frames.append(feature_motions_frame) 
-        # Track the motion of each cluster (cluster motion found using the average of each features' motion in a given cluster)
-        cluster_motions, cluster_motions_frame = track_clusters(frame, feature_motions)
-        display_frames.append(cluster_motions_frame) 
-
-
-
-        ''' IMPLEMENTATION THOUGHTS AND IDEAS:
-            - If a feature has motion that deviates from it's cluster too much, it should be discarded as a feature worth tracking
+    try:
+        
+        while True:
             
-        '''
+            display_frames = []
+
+            '''Extract image from input mp4 video file'''
+            ret, frame = cap.read()
+            if not ret: break
+            display_frames.append(frame) 
+
+            '''Background subtraction to detect motion'''
+            # Get binary mask of movement
+            backsub_mask, backsub_frame = back_sub(frame, background_object)
+            display_frames.append(backsub_frame) 
 
 
-        '''Display output in a practical way'''
+            '''Contour Detection with threshold to find reigons of interest'''
+            # Get an enhanced mask by thresholding reigons of interest by sizes of white pixel areas
+            contour_crop, contour_frame = contour_detection(frame, backsub_mask)
+            display_frames.append(contour_frame) 
 
-        display_frames = np.array([frame, backsub_frame, contour_frame, contour_frame2, contour_frame3])
+            contour_crop2, contour_frame2 = contour_approx(frame, backsub_mask)
+            display_frames.append(contour_frame2) 
 
-        max_h_frames = 3
-        window = format_window(display_frames, max_h_frames, screen_width)
-        
-        
-        cv2.imshow("", window)
-        cv2.waitKey(50)
-        
-        check_log(logger)
+            contour_crop3, contour_frame3 = contour_hull(frame, backsub_mask)
+            display_frames.append(contour_frame3) 
 
-    logger.stop()
-    cv2.destroyAllWindows()
-        
+
+            '''Feature Detection with Kernel Convolution'''
+            # Get array of points where Kernel Convolution was most effective
+            features, features_frame = feature_detection(frame, contour_crop)
+            display_frames.append(features_frame) 
+
+
+            '''Feature Segmentation using Clustering'''
+            # Segment the features into clusters to best imply the existence of individual vehicles
+            clusters, clustering_frame = clustering(frame, features)
+            display_frames.append(clustering_frame) 
+
+
+            '''Feature Motion using Optic Flow'''
+            # Track the motion of each feature
+            feature_motions, feature_motions_frame = track_features(frame, clusters)
+            display_frames.append(feature_motions_frame) 
+            # Track the motion of each cluster (cluster motion found using the average of each features' motion in a given cluster)
+            cluster_motions, cluster_motions_frame = track_clusters(frame, feature_motions)
+            display_frames.append(cluster_motions_frame) 
+
+
+
+            ''' IMPLEMENTATION THOUGHTS AND IDEAS:
+                - If a feature has motion that deviates from it's cluster too much, it should be discarded as a feature worth tracking
+                
+            '''
+
+
+            
+            
+            display_frames = np.asarray([frame, backsub_frame, contour_frame, contour_frame2, contour_frame3])
+
+            
+
+            '''Display output in a practical way'''
+            # USE THIS VARIABLE TO WRAP THE WINDOW
+            max_h_frames = 3
+            # Format the output
+            window = format_window(display_frames, max_h_frames, screen_width*.75)
+            
+            # Show image
+            cv2.imshow("", window)
+            cv2.waitKey(50)
+            
+            # Check if we should still be recording (and other controls)
+            recording = check_log(logger, recording)
+
+            if recording == True:
+                record.start_recording(window, frames)
+            
+        logger.stop()
+    except Exception as e:
+        logger.stop()
+        raise
+    
+
+    if frames != []:
+        record.save_recording(frames, save_path, "inflow_results")
+    
     cv2.destroyAllWindows() 
     cap.release()
 
@@ -151,9 +177,11 @@ PARAMETERS:
 - frame: frame from video
 - background_object: filter to apply to frame from background subtraction''' 
 def back_sub(frame, background_object):
-
-    fgmask = background_object.apply(frame) # apple background subtraction to frame 
-    _, fgmask = cv2.threshold(fgmask, 150, 255, cv2.THRESH_BINARY) # grab just the blacker parts of teh fgmask 
+    fgmask = frame
+    # fgmask = apply_pyramids(fgmask, 1)
+    
+    fgmask = background_object.apply(fgmask) # apply background subtraction to frame 
+    _, fgmask = cv2.threshold(fgmask, 150, 255, cv2.THRESH_BINARY) # remove the gray pixels which represent shadows
     foregound = cv2.bitwise_and(frame, frame, mask=fgmask) # show frame in areas in motion
 
     return fgmask, foregound
@@ -165,6 +193,25 @@ def back_sub(frame, background_object):
     # _, fgmask = cv2.threshold(fgmask, 150, 255, cv2.THRESH_BINARY) # apply threshold
     # fgmask = cv2.dilate(fgmask, kernel=None, iterations=30) # dilate
 
+
+'''This method reduces noise by applying gaussian pyramids. Pyramid up and pyramid down applied equally
+PARAMETERS:
+frame - original image to apply pyramids to
+iterations - number of times pyrUp and pyrDown should occur each
+'''
+def apply_pyramids(frame, iterations):
+
+    pyrFrame = frame
+    
+    for j in range(iterations):
+        pyrFrame = cv2.pyrDown(pyrFrame)
+
+    for i in range(iterations):
+        pyrFrame = cv2.pyrUp(pyrFrame)
+     
+    
+
+    return pyrFrame
  
 '''This method draws the rectangles around areas of detected motion
 PARAMETERS: 
@@ -229,7 +276,30 @@ PARAMETERS:
 - mad_width: maximum desired pixel width for the output window '''
 def format_window(frames, max_h_frames, max_width):
 
-    window = np.hstack(frames[:])
+    filler = np.zeros(np.asarray(frames[0]).shape,dtype=np.uint8 )
+    
+    single_frame_ratio = frames[0].shape[0]/frames[0].shape[1]
+
+    frame_count = len(frames)
+    
+    filler_count = 0
+    if frame_count%max_h_frames != 0:
+        filler_count = max_h_frames - (frame_count%max_h_frames)
+        
+        frames = np.hstack(frames)
+        for i in range(filler_count):
+            frames = np.hstack([frames, filler])
+    else:
+        frames = np.hstack(frames)
+
+    #pdb.set_trace()
+    frames = np.hsplit(frames, filler_count+frame_count)
+    hframeslist = []
+    
+    for i in range(0, len(frames), max_h_frames):
+        hframeslist.append(np.hstack(frames[i:i+max_h_frames]))
+        
+    window = np.vstack(hframeslist[:])
 
     ratio = window.shape[0]/window.shape[1]
     
@@ -241,7 +311,7 @@ def format_window(frames, max_h_frames, max_width):
 '''This method acts as a controller to manipulate the video feed
 PARAMETERS: 
 - logger: log object from key_log.py '''
-def check_log(logger):
+def check_log(logger, recording):
     
     if logger.keys_clicked:
         key = logger.keys_clicked[-1]
@@ -256,8 +326,19 @@ def check_log(logger):
                     
                     cv2.waitKey(50)
                 logger.keys_clicked.append(None)
+            elif key == 'r':
+                recording = not recording
+                cv2.waitKey(50)
+                logger.keys_clicked.append(None)
+            elif key == 'q':
+                recording = not recording
+                cv2.waitKey(50)
+                logger.keys_clicked.append(None)
+                raise
+
             else:
                 print("The key {" + key + "} has not been set up. Set up this key in 'check_log'")
+    return recording
 
 
 
