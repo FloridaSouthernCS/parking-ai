@@ -31,9 +31,14 @@ car_path = os.path.join(datapath, "Car")
 combo_path = os.path.join(datapath, "Combo")
 not_car_path = os.path.join(datapath, "Not_Car")
 
+# addr = os.path.join(car_path, "car1.mp4")
+# addr = os.path.join(combo_path, "combo5.mp4")
+# addr = os.path.join(not_car_path, "not_car10.mp4")
 
-# addr = os.path.join(not_car_path, "not_car10.mp4")
-# addr = os.path.join(not_car_path, "not_car10.mp4")
+
+# addr = os.path.join(car_path, "car1.mp4")
+# addr = os.path.join(combo_path, "combo3.mp4")
+addr = os.path.join(not_car_path, "not_car10.mp4")
 
 
 # PARAMETERS
@@ -111,25 +116,42 @@ def main():
             display_frames.append(contour_frame3) 
 
 
-            '''Feature Detection with Kernel Convolution'''
-            # Get array of points where Kernel Convolution was most effective
-            features, features_frame = feature_detection(frame, contour_crop)
-            display_frames.append(features_frame) 
+            # R, G, B = cv2.split(frame)
+
+            # output1_R = cv2.equalizeHist(R)
+            # output1_G = cv2.equalizeHist(G)
+            # output1_B = cv2.equalizeHist(B)
+
+            # equ = cv2.merge((output1_R, output1_G, output1_B))
+            equ = cv2.normalize(frame, frame, 0, 255, cv2.NORM_MINMAX)
+
+            backsub_mask2, backsub_frame2 = back_sub(equ, background_object)
+            display_frames.append(backsub_mask2) 
 
 
-            '''Feature Segmentation using Clustering'''
-            # Segment the features into clusters to best imply the existence of individual vehicles
-            clusters, clustering_frame = clustering(frame, features)
-            display_frames.append(clustering_frame) 
+            contour_crop4, contour_frame4 = contour_hull(equ, backsub_mask2)
+            display_frames.append(contour_frame4) 
 
 
-            '''Feature Motion using Optic Flow'''
-            # Track the motion of each feature
-            feature_motions, feature_motions_frame = track_features(frame, clusters)
-            display_frames.append(feature_motions_frame) 
-            # Track the motion of each cluster (cluster motion found using the average of each features' motion in a given cluster)
-            cluster_motions, cluster_motions_frame = track_clusters(frame, feature_motions)
-            display_frames.append(cluster_motions_frame) 
+            # '''Feature Detection with Kernel Convolution'''
+            # # Get array of points where Kernel Convolution was most effective
+            # features, features_frame = feature_detection(frame, contour_crop)
+            # display_frames.append(features_frame) 
+
+
+            # '''Feature Segmentation using Clustering'''
+            # # Segment the features into clusters to best imply the existence of individual vehicles
+            # clusters, clustering_frame = clustering(frame, features)
+            # display_frames.append(clustering_frame) 
+
+
+            # '''Feature Motion using Optic Flow'''
+            # # Track the motion of each feature
+            # feature_motions, feature_motions_frame = track_features(frame, clusters)
+            # display_frames.append(feature_motions_frame) 
+            # # Track the motion of each cluster (cluster motion found using the average of each features' motion in a given cluster)
+            # cluster_motions, cluster_motions_frame = track_clusters(frame, feature_motions)
+            # display_frames.append(cluster_motions_frame) 
 
 
 
@@ -139,7 +161,7 @@ def main():
             '''
             
             
-            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, contour_frame2, contour_frame3])
+            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame3, equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             
 
@@ -183,10 +205,9 @@ def back_sub(frame, background_object):
     
     fgmask = background_object.apply(fgmask) # apply background subtraction to frame 
     _, fgmask = cv2.threshold(fgmask, 150, 255, cv2.THRESH_BINARY) # remove the gray pixels which represent shadows
+    # fgmask = cv2.erode(fgmask, kernel=(15,15), iterations = 5)
 
-    # fgmask= cv2.erode(fgmask, kernel=(30,30), iterations=10) # erode
-
-    fgmask = cv2.dilate(fgmask, kernel=None, iterations=2) # dilate
+    fgmask = cv2.dilate(fgmask, kernel=(25,25), iterations=5) # dilate
     foregound = cv2.bitwise_and(frame, frame, mask=fgmask) # show frame in areas in motion
 
     return fgmask, foregound
