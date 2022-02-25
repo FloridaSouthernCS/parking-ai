@@ -31,13 +31,15 @@ car_path = os.path.join(datapath, "Car")
 combo_path = os.path.join(datapath, "Combo")
 not_car_path = os.path.join(datapath, "Not_Car")
 
-addr = os.path.join(not_car_path, "not_car10.mp4")
+
+# addr = os.path.join(not_car_path, "not_car10.mp4")
+# addr = os.path.join(not_car_path, "not_car10.mp4")
 
 
 # PARAMETERS
-VAR_THRESHOLD = 100 # BACKGROUND SUB PARAMETER
+VAR_THRESHOLD = 200 # BACKGROUND SUB PARAMETER
 
-CONTOUR_THRESHOLD = 5000 # COUNTOR THRESHOLD FOR CONTOUR AREA
+CONTOUR_THRESHOLD = 7000 # COUNTOR THRESHOLD FOR CONTOUR AREA
 
 
 # KANADE PARAMETERS
@@ -176,10 +178,15 @@ PARAMETERS:
 - background_object: filter to apply to frame from background subtraction''' 
 def back_sub(frame, background_object):
     fgmask = frame
+
     # fgmask = apply_pyramids(fgmask, 1)
     
     fgmask = background_object.apply(fgmask) # apply background subtraction to frame 
     _, fgmask = cv2.threshold(fgmask, 150, 255, cv2.THRESH_BINARY) # remove the gray pixels which represent shadows
+
+    # fgmask= cv2.erode(fgmask, kernel=(30,30), iterations=10) # erode
+
+    fgmask = cv2.dilate(fgmask, kernel=None, iterations=2) # dilate
     foregound = cv2.bitwise_and(frame, frame, mask=fgmask) # show frame in areas in motion
 
     return fgmask, foregound
