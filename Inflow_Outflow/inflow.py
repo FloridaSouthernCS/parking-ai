@@ -36,9 +36,9 @@ not_car_path = os.path.join(datapath, "Not_Car")
 # addr = os.path.join(not_car_path, "not_car10.mp4")
 
 
-# addr = os.path.join(car_path, "car1.mp4")
+addr = os.path.join(car_path, "car1.mp4")
 # addr = os.path.join(combo_path, "combo3.mp4")
-addr = os.path.join(not_car_path, "not_car10.mp4")
+# addr = os.path.join(not_car_path, "not_car10.mp4")
 
 
 # PARAMETERS
@@ -85,7 +85,7 @@ def main():
     recording = False
 
     # Get R.O.I. tool
-    background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=VAR_THRESHOLD, detectShadows=True) 
+    background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=VAR_THRESHOLD, detectShadows=False) 
     
     try:
         
@@ -161,9 +161,9 @@ def main():
             '''
             
             
-            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame3, equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            # display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame3, equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
-            
+            display_frames = np.asarray([equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
             # USE THIS VARIABLE TO WRAP THE WINDOW

@@ -5,6 +5,7 @@ import numpy as np
 import cv2
 import os
 import math
+import default
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
 grab_path = os.path.join(main_path, "Preprocess\\Inflow\\Car")
@@ -26,6 +27,7 @@ def dense_optical_flow(method, video_path, params=[], to_gray=True):
         old_frame = cv2.cvtColor(old_frame, cv2.COLOR_BGR2GRAY)
     frame_rate = 5
     prev = 0
+    frames = []
     while True:
         
         time.sleep(.01)
@@ -69,12 +71,14 @@ def dense_optical_flow(method, video_path, params=[], to_gray=True):
 
             # Update the previous frame
             old_frame = new_frame
+            default.start_recording(window, frames)
+    default.save_recording(frames)
 
 
 
 
 def main():
-    dense_optical_flow(cv2.calcOpticalFlowFarneback, 'sample3.mp4',[0.5, 10, 20, 15, 10, 1.2, 0])
+    dense_optical_flow(cv2.calcOpticalFlowFarneback, 'sample3.mp4',[0.5, 10, 10, 5, 10, 1.2, 0])
     cv2.calcOpticalFlowFarneback()
 
 main()

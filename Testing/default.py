@@ -11,15 +11,17 @@ import pdb
 import imageio
 import matplotlib.pyplot as plt
 from pynput.keyboard import Listener
+import median_frame_queue
 
 main_path = os.path.dirname(os.path.abspath(__file__))
-save_folder = "preprocess"
+save_folder = "Preprocess/Inflow/Car"
 save_path = os.path.join(main_path, save_folder)
 keys_clicked = []
 valid_keys = []
 
 # main_path = os.path.dirname(os.path.abspath(__file__)) 
-# grab_path = os.path.join(main_path, "preprocess")
+grab_path = os.path.join(main_path, "Preprocess\\Inflow\\Not_Car")
+
 # addr = os.path.join(grab_path, "large_white_night.mp4")
 # cap = cv2.VideoCapture(addr)
 
@@ -28,12 +30,13 @@ def main():
     global valid_keys
     # Track what keys are pressed
     valid_keys += ['r', 's', 'q', 'd']
-    check_key()
+    # check_key()
     
     
     # Default Garden enterance IP
-    addr = 'http://10.7.0.19/image4?res=half&quality=1&doublescan=0'
-    # addr = os.path.join(grab_path, "large_white_night.mp4")
+    #addr = 'http://10.7.0.19/image4?res=half&quality=1&doublescan=0'
+    addr = os.path.join(grab_path, "not_car10.mp4")
+    
     pull_from_addr(addr, keys_clicked)
     
     
@@ -51,11 +54,17 @@ def pull_from_addr(addr, keys_clicked):
         vid = cv2.VideoCapture(addr)
     except Exception as e:
         print(e)
-
-    
+    median = median_frame_queue.median_frame(60)
+    frames = []
+    ret, frame = vid.read()
     # while q is not hit
-    while 'q' not in keys_clicked:
-
+    while 'q' not in keys_clicked and ret:
+        
+        frames.append(frame)
+        median.add_frame(frame)
+        # show frame 
+        show_img(frame)
+        
         # grab frame
         try:
             ret, frame = vid.read()
@@ -63,13 +72,25 @@ def pull_from_addr(addr, keys_clicked):
             print(e)
             continue
         
+    print(len(frames))
         
-        # show frame 
-        show_img(frame)
 
+    show_img(median.get_median())
     
     vid.release()
+    pdb.set_trace()
     cv2.destroyAllWindows()
+
+def median(frames):
+    frames = np.asarray(frames)
+    # grays = []
+    # for frame in frames:
+    #     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+    #     grays.append(gray)
+    median_img = np.median(np.asarray(frames, dtype = np.uint8), axis=0).astype(np.uint8)
+    # median_img = cv2.cvtColor(median_img, cv2.COLOR_GRAY2BGR)
+
+    return median_img
 
 # Used to watch live video from web
 def pull_from_web(addr, keys_clicked):
