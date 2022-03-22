@@ -38,7 +38,7 @@ not_car_path = os.path.join(datapath, "Not_Car")
 # addr = os.path.join(not_car_path, "not_car10.mp4")
 
 
-addr = os.path.join(car_path, "car8.mp4")
+addr = os.path.join(car_path, "car10.mp4")
 # addr = os.path.join(combo_path, "combo1.mp4")
 # addr = os.path.join(not_car_path, "not_car10.mp4")
 
@@ -172,7 +172,7 @@ def main():
             foregound = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
             
             # pdb.set_trace()
-            display_frames = np.asarray([equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4, foregound ])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            display_frames = np.asarray([equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame, contour_frame4, foregound ])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
             # USE THIS VARIABLE TO WRAP THE WINDOW
