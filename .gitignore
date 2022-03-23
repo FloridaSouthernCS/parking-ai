@@ -5,6 +5,7 @@ __pycache__/
 
 # C extensions
 *.so
+Inflow_Outflow/moc-lots-firebase-adminsdk-pt2o1-1ca13da1f0.json
 
 # Distribution / packaging
 .Python
