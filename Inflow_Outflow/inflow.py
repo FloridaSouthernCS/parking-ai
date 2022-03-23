@@ -1,4 +1,5 @@
 # backsub_w_contour.py
+from lib2to3.pgen2.token import EQUAL
 from logging import captureWarnings
 from operator import xor
 import cv2 
@@ -38,9 +39,10 @@ not_car_path = os.path.join(datapath, "Not_Car")
 # addr = os.path.join(not_car_path, "not_car10.mp4")
 
 
-addr = os.path.join(car_path, "car10.mp4")
-# addr = os.path.join(combo_path, "combo1.mp4")
-# addr = os.path.join(not_car_path, "not_car10.mp4")
+
+# addr = os.path.join(car_path, "car18.mp4")
+# addr = os.path.join(combo_path, "combo7.mp4")
+addr = os.path.join(not_car_path, "not_car11.mp4")
 
 
 # PARAMETERS
@@ -117,19 +119,17 @@ def main():
             display_frames.append(contour_frame3) 
 
 
-            # R, G, B = cv2.split(frame)
+            
+            ##HERE
 
-            # output1_R = cv2.equalizeHist(R)
-            # output1_G = cv2.equalizeHist(G)
-            # output1_B = cv2.equalizeHist(B)
+            #increase contrast
+            equ = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
 
-            # equ = cv2.merge((output1_R, output1_G, output1_B))
-            equ = cv2.normalize(frame, frame, 0, 255, cv2.NORM_MINMAX)
-
+            # background subtraction
             backsub_mask2, backsub_frame2 = back_sub(equ, background_object)
             display_frames.append(backsub_mask2) 
 
-
+            # contour areas 
             contour_crop4, contour_frame4 = contour_hull(equ, backsub_mask2)
             display_frames.append(contour_frame4) 
 
@@ -165,11 +165,11 @@ def main():
             # display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame3, equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
             cmask = contour_mask(np.array(contour_frame4), (0,255,0))
             
-            _, cmask = contour_hull(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+            _, cmask = contour_hull(equ, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
             # pdb.set_trace()
             cmask = contour_mask(cmask, (255,255,255))
 
-            foregound = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+            foregound = cv2.bitwise_and(equ, equ, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
             
             # pdb.set_trace()
             display_frames = np.asarray([equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame, contour_frame4, foregound ])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
