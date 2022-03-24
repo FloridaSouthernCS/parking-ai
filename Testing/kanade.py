@@ -39,7 +39,7 @@ old_gray = cv2.cvtColor(old_frame,
 
 p0 = cv2.goodFeaturesToTrack(old_gray, mask = None,
                              **feature_params)
-
+pdb.set_trace()
 # Create a mask image for drawing purposes
 mask = np.zeros_like(old_frame)
   
@@ -68,7 +68,7 @@ while(1):
                                        good_old)):
         a, b = new.ravel()
         f, d = old.ravel()
-        #pdb.set_trace()
+        pdb.set_trace()
         mask = cv2.line(mask, (int(a), int(b)), (int(f), int(d)),
                         color[i].tolist(), 2)
           

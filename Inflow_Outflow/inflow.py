@@ -40,9 +40,9 @@ not_car_path = os.path.join(datapath, "Not_Car")
 
 
 
-# addr = os.path.join(car_path, "car18.mp4")
+addr = os.path.join(car_path, "car18.mp4")
 # addr = os.path.join(combo_path, "combo7.mp4")
-addr = os.path.join(not_car_path, "not_car11.mp4")
+# addr = os.path.join(not_car_path, "not_car11.mp4")
 
 
 # PARAMETERS
@@ -91,7 +91,9 @@ def main():
     background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=VAR_THRESHOLD, detectShadows=False) 
     
     try:
-        
+        ret, frame = cap.read()
+        old_frame = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
+        p0 = []
         while True:
             
             display_frames = []
@@ -100,7 +102,7 @@ def main():
             ret, frame = cap.read()
             if not ret: break
             display_frames.append(frame) 
-
+            frame = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
             '''Background subtraction to detect motion'''
             # Get binary mask of movement
             backsub_mask, backsub_frame = back_sub(frame, background_object)
@@ -163,16 +165,18 @@ def main():
             
             
             # display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame3, equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
-            cmask = contour_mask(np.array(contour_frame4), (0,255,0))
-            
-            _, cmask = contour_hull(equ, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
-            # pdb.set_trace()
-            cmask = contour_mask(cmask, (255,255,255))
 
-            foregound = cv2.bitwise_and(equ, equ, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
-            
+            # Get double convex hulled max
+            foreground, cmask = get_cmask(contour_frame4, equ)
+            flow_img = np.empty(cmask.shape)
+            # Apply optic flow to foreground of cmask
+            flow_img, p0 = optic_flow(foreground, old_frame, cmask, p0)
+                
+                # pdb.set_trace()
+
+
             # pdb.set_trace()
-            display_frames = np.asarray([equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame, contour_frame4, foregound ])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            display_frames = np.asarray([equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame, contour_frame4, foreground, flow_img ])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
             # USE THIS VARIABLE TO WRAP THE WINDOW
@@ -180,6 +184,9 @@ def main():
             # Format the output
             window = format_window(display_frames, max_h_frames, screen_width*.75)
             
+            if len(frame) > 0:
+                old_frame = frame
+
             # Show image
             cv2.imshow("", window)
             cv2.waitKey(50)
@@ -201,6 +208,19 @@ def main():
     
     cv2.destroyAllWindows() 
     cap.release()
+
+
+def get_cmask(contour_frame, frame):
+    cmask = contour_mask(np.array(contour_frame), (0,255,0))
+            
+    _, cmask = contour_hull(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+    # pdb.set_trace()
+    cmask = contour_mask(cmask, (255,255,255))
+
+    foreground = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+
+    return foreground, cmask
+    
 
 
 '''This method applies Background Subtraction 
@@ -310,7 +330,91 @@ def contour_mask(contour, color):
     return fgmask
     
 def feature_detection(initial_frame, frame):
+    
     return None, None
+
+def optic_flow(frame, old_frame, mask, p0):
+    mask = cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY)
+    img = frame
+    # If the mask is not empty
+    if not (np.array_equal(np.empty(mask.shape), mask)):
+        
+        frame_gray = cv2.cvtColor(frame,
+                              cv2.COLOR_BGR2GRAY)
+        old_gray = cv2.cvtColor(old_frame,
+                              cv2.COLOR_BGR2GRAY)
+        
+        if len(p0) <= 0:
+            p0 = cv2.goodFeaturesToTrack(frame_gray, mask = mask,
+                            **feature_params)
+    
+        # calculate optical flow
+        p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray,
+                                            frame_gray,
+                                            p0, None,
+                                            **lk_params)
+        
+        # Select good points
+        try:
+            good_new = p1[st == 1]
+            good_old = p0[st == 1]
+        except Exception as e:
+            pass
+        
+        
+        # draw the tracks
+        for i, (new, old) in enumerate(zip(good_new, 
+                                        good_old)):
+            a, b = new.ravel()
+            f, d = old.ravel()
+           
+            draw_mask = cv2.line(np.zeros_like(old_frame), (int(a), int(b)), (int(f), int(d)),
+                            color[i].tolist(), 2)
+            
+            frame = cv2.circle(frame, (int(a), int(b)), 5,
+                            color[i].tolist(), -1)
+        # pdb.set_trace()
+        img = cv2.add(frame, draw_mask)
+
+    return img.astype(np.uint8), p0
+
+
+        # gray = cv2.cvtColor(initial_frame, cv2.COLOR_BGR2GRAY)
+        # gray_mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+        # p0 = cv2.goodFeaturesToTrack(gray, mask = gray_mask,
+        #                     **feature_params)
+
+        # # calculate optical flow
+        # p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray,
+        #                             gray,
+        #                             p0, None,
+        #                             **lk_params)
+
+    
+        # # Select good points
+        # try:
+        #     good_new = p1[st == 1]
+        #     good_old = p0[st == 1]
+        # except Exception as e:
+        #     pass
+        
+        
+        # # draw the tracks
+        # for i, (new, old) in enumerate(zip(good_new, 
+        #                                 good_old)):
+        #     a, b = new.ravel()
+        #     f, d = old.ravel()
+        #     # pdb.set_trace()
+        #     gray_mask = cv2.line(gray_mask, (int(a), int(b)), (int(f), int(d)),
+        #                     color[i].tolist(), 2)
+            
+        #     gray = cv2.circle(gray, (int(a), int(b)), 5,
+        #                     color[i].tolist(), -1)
+        # #pdb.set_trace()
+        # # pdb.set_trace()
+        # img1 = cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
+        # img2 = cv2.cvtColor(gray_mask, cv2.COLOR_GRAY2RGB)
+        # flow_img = cv2.add(img1, img2)
 
 def clustering(initial_frame, frame):
     return None, None
