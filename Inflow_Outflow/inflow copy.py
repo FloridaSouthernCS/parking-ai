@@ -1,8 +1,10 @@
 # backsub_w_contour.py
+from lib2to3.pgen2.token import EQUAL
 from logging import captureWarnings
 from operator import xor
 import cv2 
 import os
+from cv2 import threshold
 import scipy.ndimage as sp
 import pdb
 import numpy as np 
@@ -10,6 +12,7 @@ import tkinter as tk
 import math
 import key_log
 import record
+
 
 '''
     Document conventions:
@@ -36,9 +39,10 @@ not_car_path = os.path.join(datapath, "Not_Car")
 # addr = os.path.join(not_car_path, "not_car10.mp4")
 
 
-addr = os.path.join(car_path, "car1.mp4")
-# addr = os.path.join(combo_path, "combo3.mp4")
-# addr = os.path.join(not_car_path, "not_car10.mp4")
+
+addr = os.path.join(car_path, "car10.mp4")
+# addr = os.path.join(combo_path, "combo7.mp4")
+# addr = os.path.join(not_car_path, "not_car11.mp4")
 
 
 # PARAMETERS
@@ -67,7 +71,6 @@ color = np.random.randint(0, 255, (100, 3))
 root = tk.Tk()
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
-
 def main():
     # Create key_log object to control what video is processed
     print("Controls: ")
@@ -77,6 +80,7 @@ def main():
     # print("  d: Next")
     logger = key_log.log(['s', 'r', 'q'])
     logger.start()
+
     # Get Video from mp4 source
     cap = cv2.VideoCapture(addr)
 
@@ -94,7 +98,6 @@ def main():
 
             '''Extract image from input mp4 video file'''
             ret, frame = cap.read()
-            
             if not ret: break
             display_frames.append(frame) 
 
@@ -116,19 +119,17 @@ def main():
             display_frames.append(contour_frame3) 
 
 
-            # R, G, B = cv2.split(frame)
+            
+            ##HERE
 
-            # output1_R = cv2.equalizeHist(R)
-            # output1_G = cv2.equalizeHist(G)
-            # output1_B = cv2.equalizeHist(B)
+            #increase contrast
+            equ = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
 
-            # equ = cv2.merge((output1_R, output1_G, output1_B))
-            equ = cv2.normalize(frame, frame, 0, 255, cv2.NORM_MINMAX)
-            frames.append(equ)
+            # background subtraction
             backsub_mask2, backsub_frame2 = back_sub(equ, background_object)
             display_frames.append(backsub_mask2) 
 
-
+            # contour areas 
             contour_crop4, contour_frame4 = contour_hull(equ, backsub_mask2)
             display_frames.append(contour_frame4) 
 
@@ -162,7 +163,16 @@ def main():
             
             
             # display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame3, equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
-            display_frames = np.asarray([equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            cmask = contour_mask(np.array(contour_frame4), (0,255,0))
+            
+            _, cmask = contour_hull(equ, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+            # pdb.set_trace()
+            cmask = contour_mask(cmask, (255,255,255))
+
+            foregound = cv2.bitwise_and(equ, equ, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+            
+            # pdb.set_trace()
+            display_frames = np.asarray([equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame, contour_frame4, foregound ])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
             # USE THIS VARIABLE TO WRAP THE WINDOW
@@ -179,14 +189,11 @@ def main():
 
             if recording == True:
                 record.start_recording(window, frames)
-        
+            
         logger.stop()
-
     except Exception as e:
         logger.stop()
-        raise e
-    
-    
+        raise
     
 
     if frames != []:
@@ -220,8 +227,6 @@ def back_sub(frame, background_object):
     # cv2.erode(fgmask, kernel=(10,10), iterations=2) # erode
     # _, fgmask = cv2.threshold(fgmask, 150, 255, cv2.THRESH_BINARY) # apply threshold
     # fgmask = cv2.dilate(fgmask, kernel=None, iterations=30) # dilate
-
-
 
 
 '''This method reduces noise by applying gaussian pyramids. Pyramid up and pyramid down applied equally
@@ -277,14 +282,33 @@ def contour_hull(frame, fgmask):
     contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
     contour_frame = frame.copy()
 
+    count = 0
     for c in contours:
         if cv2.contourArea(c) > CONTOUR_THRESHOLD:
             hull = cv2.convexHull(c)
-            cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), 2)
+            count += 1
+            # saves.append(hull)
+            cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
     
     return None, contour_frame
 
+def contour_mask(contour, color):
+    
+    r1, g1, b1 = color # Original value
+    r2, g2, b2 = 0, 0, 0 # Value that we want to replace it with
 
+    red, green, blue = contour[:,:,0], contour[:,:,1], contour[:,:,2]
+    bleh = ~ ((red == r1) | (green == g1) | (blue == b1))
+    contour[:,:,:3][bleh] = [r2, g2, b2]
+    # contour = contour.astype('uint8')
+
+    temp = cv2.cvtColor(contour, cv2.COLOR_RGB2GRAY)
+    _, fgmask = cv2.threshold(temp, 1, 255, cv2.THRESH_BINARY)
+    
+    
+    fgmask = cv2.cvtColor(fgmask, cv2.COLOR_GRAY2RGB)
+    return fgmask
+    
 def feature_detection(initial_frame, frame):
     return None, None
 
