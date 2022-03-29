@@ -144,10 +144,10 @@ def main():
             # pdb.set_trace()
             cmask = contour_mask(cmask, (255,255,255))
 
-            foregound = cv2.bitwise_and(frame_norm, frame_norm, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+            foreground = cv2.bitwise_and(frame_norm, frame_norm, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
             
             # pdb.set_trace()
-            display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4, foregound ])
+            display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4, foreground ])
             
             
             # Get double convex hulled max
@@ -159,7 +159,7 @@ def main():
                 
 
 
-            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame4, foreground, flow_img ])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask1, cv2.COLOR_GRAY2BGR), contour_frame4, foreground, flow_img ])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
             # USE THIS VARIABLE TO WRAP THE WINDOW
@@ -221,9 +221,9 @@ def back_sub(frame, background_object):
     # fgmask = cv2.erode(fgmask, kernel=(15,15), iterations = 5)
 
     fgmask = cv2.dilate(fgmask, kernel=(25,25), iterations=5) # dilate
-    foregound = cv2.bitwise_and(temp, temp, mask=fgmask) # show frame in areas in motion
+    foreground = cv2.bitwise_and(temp, temp, mask=fgmask) # show frame in areas in motion
 
-    return fgmask, foregound
+    return fgmask, foreground
 
 
     # OTHER METHODS
