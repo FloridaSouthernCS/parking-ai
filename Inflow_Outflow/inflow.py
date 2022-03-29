@@ -339,7 +339,7 @@ def optic_flow(frame, old_frame, mask, p0):
     mask = cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY)
     img = frame
     # If the mask is not empty
-    if not (np.array_frameal(np.empty(mask.shape), mask)):
+    if not (np.array_equal(np.empty(mask.shape), mask)):
         
         frame_gray = cv2.cvtColor(frame,
                               cv2.COLOR_BGR2GRAY)
