@@ -338,44 +338,6 @@ def optic_flow(frame, old_frame, mask, p0):
 
     return img.astype(np.uint8), p0
 
-
-        # gray = cv2.cvtColor(initial_frame, cv2.COLOR_BGR2GRAY)
-        # gray_mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
-        # p0 = cv2.goodFeaturesToTrack(gray, mask = gray_mask,
-        #                     **feature_params)
-
-        # # calculate optical flow
-        # p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray,
-        #                             gray,
-        #                             p0, None,
-        #                             **lk_params)
-
-    
-        # # Select good points
-        # try:
-        #     good_new = p1[st == 1]
-        #     good_old = p0[st == 1]
-        # except Exception as e:
-        #     pass
-        
-        
-        # # draw the tracks
-        # for i, (new, old) in enumerate(zip(good_new, 
-        #                                 good_old)):
-        #     a, b = new.ravel()
-        #     f, d = old.ravel()
-        #     # pdb.set_trace()
-        #     gray_mask = cv2.line(gray_mask, (int(a), int(b)), (int(f), int(d)),
-        #                     color[i].tolist(), 2)
-            
-        #     gray = cv2.circle(gray, (int(a), int(b)), 5,
-        #                     color[i].tolist(), -1)
-        # #pdb.set_trace()
-        # # pdb.set_trace()
-        # img1 = cv2.cvtColor(gray, cv2.COLOR_GRAY2RGB)
-        # img2 = cv2.cvtColor(gray_mask, cv2.COLOR_GRAY2RGB)
-        # flow_img = cv2.add(img1, img2)
-
 def clustering(initial_frame, frame):
     return None, None
 
