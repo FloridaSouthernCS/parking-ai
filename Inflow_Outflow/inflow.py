@@ -103,28 +103,51 @@ def main():
             ret, frame = cap.read()
             if not ret: break
             display_frames.append(frame) 
-            frame = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
+
+
             '''Background subtraction to detect motion'''
-            # Get binary mask of movement
-            backsub_mask, backsub_frame = back_sub(frame, background_object)
-            display_frames.append(backsub_frame) 
+            # # Get binary mask of movement
+            backsub_mask1, backsub_frame1 = back_sub(frame, background_object)
 
 
             '''Contour Detection with threshold to find reigons of interest'''
             # Get an enhanced mask by thresholding reigons of interest by sizes of white pixel areas
-            # contour_det_crop, contour_det = contour_detection(frame, backsub_mask)
-            # display_frames.append(contour_det) 
+            # contour_detection_crop, contour_detection_frame = contour_detection(frame, backsub_mask)
+            # display_frames.append(contour_detection_frame) 
 
-            # contour_app_crop, contour_app = contour_approx(frame, backsub_mask)
-            # display_frames.append(contour_app) 
+            # contour_approx_crop, contour_approx_frame = contour_approx(frame, backsub_mask)
+            # display_frames.append(contour_approx_frame) 
 
-            # contour_hull_crop, contour_hul = contour_hull(frame, backsub_mask)
-            # display_frames.append(contour_hul)  
+            # contour_hull_crop, contour_hull_frame = contour_hull(frame, backsub_mask)
+            # display_frames.append(contour_hull_frame) 
+
+            # frame_temp = np.copy(frame)
+
+            frame_norm = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
+
+
+
+            #increase contrast
+
+            # background subtraction
+            backsub_mask2, backsub_frame2 = back_sub(frame_norm, background_object)
 
             # contour areas 
-            contour_crop4, contour_frame4 = contour_hull(frame, backsub_mask)
-            display_frames.append(contour_frame4) 
+            contour_crop4, contour_frame4 = contour_hull(frame_norm, backsub_mask2)
 
+
+            
+            # display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame3, equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            cmask = contour_mask(np.array(contour_frame4), (0,255,0))
+            
+            _, cmask = contour_hull(frame_norm, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+            # pdb.set_trace()
+            cmask = contour_mask(cmask, (255,255,255))
+
+            foregound = cv2.bitwise_and(frame_norm, frame_norm, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+            
+            # pdb.set_trace()
+            display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4, foregound ])
             
             
             # Get double convex hulled max
@@ -188,7 +211,8 @@ PARAMETERS:
 - frame: frame from video
 - background_object: filter to apply to frame from background subtraction''' 
 def back_sub(frame, background_object):
-    fgmask = frame
+    fgmask = np.copy(frame)
+    temp = np.copy(frame)
 
     # fgmask = apply_pyramids(fgmask, 1)
     
@@ -197,7 +221,7 @@ def back_sub(frame, background_object):
     # fgmask = cv2.erode(fgmask, kernel=(15,15), iterations = 5)
 
     fgmask = cv2.dilate(fgmask, kernel=(25,25), iterations=5) # dilate
-    foregound = cv2.bitwise_and(frame, frame, mask=fgmask) # show frame in areas in motion
+    foregound = cv2.bitwise_and(temp, temp, mask=fgmask) # show frame in areas in motion
 
     return fgmask, foregound
 
