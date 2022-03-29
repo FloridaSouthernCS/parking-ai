@@ -112,56 +112,21 @@ def main():
 
             '''Contour Detection with threshold to find reigons of interest'''
             # Get an enhanced mask by thresholding reigons of interest by sizes of white pixel areas
-            contour_crop, contour_frame = contour_detection(frame, backsub_mask)
-            display_frames.append(contour_frame) 
+            # contour_det_crop, contour_det = contour_detection(frame, backsub_mask)
+            # display_frames.append(contour_det) 
 
-            contour_crop2, contour_frame2 = contour_approx(frame, backsub_mask)
-            display_frames.append(contour_frame2) 
+            # contour_app_crop, contour_app = contour_approx(frame, backsub_mask)
+            # display_frames.append(contour_app) 
 
-            contour_crop3, contour_frame3 = contour_hull(frame, backsub_mask)
-            display_frames.append(contour_frame3) 
-
-            
-
-            # background subtraction
-            backsub_mask2, backsub_frame2 = back_sub(frame, background_object)
-            display_frames.append(backsub_mask2) 
+            # contour_hull_crop, contour_hul = contour_hull(frame, backsub_mask)
+            # display_frames.append(contour_hul)  
 
             # contour areas 
-            contour_crop4, contour_frame4 = contour_hull(frame, backsub_mask2)
+            contour_crop4, contour_frame4 = contour_hull(frame, backsub_mask)
             display_frames.append(contour_frame4) 
 
-
-            # '''Feature Detection with Kernel Convolution'''
-            # # Get array of points where Kernel Convolution was most effective
-            # features, features_frame = feature_detection(frame, contour_crop)
-            # display_frames.append(features_frame) 
-
-
-            # '''Feature Segmentation using Clustering'''
-            # # Segment the features into clusters to best imply the existence of individual vehicles
-            # clusters, clustering_frame = clustering(frame, features)
-            # display_frames.append(clustering_frame) 
-
-
-            # '''Feature Motion using Optic Flow'''
-            # # Track the motion of each feature
-            # feature_motions, feature_motions_frame = track_features(frame, clusters)
-            # display_frames.append(feature_motions_frame) 
-            # # Track the motion of each cluster (cluster motion found using the average of each features' motion in a given cluster)
-            # cluster_motions, cluster_motions_frame = track_clusters(frame, feature_motions)
-            # display_frames.append(cluster_motions_frame) 
-
-
-
-            ''' IMPLEMENTATION THOUGHTS AND IDEAS:
-                - If a feature has motion that deviates from it's cluster too much, it should be discarded as a feature worth tracking
-                
-            '''
             
             
-            # display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame3, frame, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
-
             # Get double convex hulled max
             if len(cmask) <= 0:
                 foreground, cmask = get_cmask(contour_frame4, frame)
@@ -169,11 +134,9 @@ def main():
             # Apply optic flow to foreground of cmask
             flow_img, p0 = optic_flow(frame, old_frame, cmask, p0)
                 
-                # pdb.set_trace()
 
 
-            # pdb.set_trace()
-            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame, contour_frame4, foreground, flow_img ])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame4, foreground, flow_img ])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
             # USE THIS VARIABLE TO WRAP THE WINDOW
