@@ -121,11 +121,6 @@ def main():
             contour_crop3, contour_frame3 = contour_hull(frame, backsub_mask)
             display_frames.append(contour_frame3) 
 
-
-            
-            ##HERE
-
-            #increase contrast
             
 
             # background subtraction
@@ -347,7 +342,7 @@ def optic_flow(frame, old_frame, mask, p0):
                               cv2.COLOR_BGR2GRAY)
         
         if len(p0) <= 0:
-            p0 = cv2.goodFeaturesToTrack(frame_gray, mask = mask,
+            p0 = cv2.goodFeaturesToTrack(frame_gray, mask = None,
                             **feature_params)
     
         # calculate optical flow
