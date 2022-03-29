@@ -130,36 +130,24 @@ def main():
             #increase contrast
 
             # background subtraction
-            backsub_mask2, backsub_frame2 = back_sub(frame_norm, background_object)
+            backsub_mask, backsub_frame = back_sub(frame_norm, background_object)
 
             # contour areas 
-            contour_crop4, contour_frame4 = contour_hull(frame_norm, backsub_mask2)
+            contour_crop, contour_frame = contour_hull(frame_norm, backsub_mask)
 
 
-            
-            # display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame3, equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
-            cmask = contour_mask(np.array(contour_frame4), (0,255,0))
-            
-            _, cmask = contour_hull(frame_norm, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
-            # pdb.set_trace()
-            cmask = contour_mask(cmask, (255,255,255))
-
-            foreground = cv2.bitwise_and(frame_norm, frame_norm, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
-            
-            # pdb.set_trace()
-            display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4, foreground ])
-            
+         
             
             # Get double convex hulled max
-            if len(cmask) <= 0:
-                foreground, cmask = get_cmask(contour_frame4, frame)
-                flow_img = np.empty(cmask.shape)
+            # if len(cmask) <= 0:
+            foreground, cmask = get_cmask(contour_frame, frame)
+            flow_img = np.empty(cmask.shape)
             # Apply optic flow to foreground of cmask
             flow_img, p0 = optic_flow(frame, old_frame, cmask, p0)
                 
 
 
-            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask1, cv2.COLOR_GRAY2BGR), contour_frame4, foreground, flow_img ])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, flow_img])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
             # USE THIS VARIABLE TO WRAP THE WINDOW
@@ -319,10 +307,7 @@ def feature_detection(initial_frame, frame):
 
 def optic_flow(frame, old_frame, mask, p0):
     mask = cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY)
-
-    # Default img initialization for return statement
     img = frame
-    
     # If the mask is not empty
     if not (np.array_equal(np.empty(mask.shape), mask)):
         
