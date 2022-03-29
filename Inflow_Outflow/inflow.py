@@ -1,11 +1,11 @@
 # backsub_w_contour.py
-from lib2to3.pgen2.token import EQUAL
-from logging import captureWarnings
-from operator import xor
+# from lib2to3.pgen2.token import frameAL
+# from logging import captureWarnings
+# from operator import xor
 import cv2 
 import os
-from cv2 import threshold
-import scipy.ndimage as sp
+# from cv2 import threshold
+# import scipy.ndimage as sp
 import pdb
 import numpy as np 
 import tkinter as tk
@@ -40,7 +40,7 @@ not_car_path = os.path.join(datapath, "Not_Car")
 
 
 
-addr = os.path.join(car_path, "car18.mp4")
+addr = os.path.join(car_path, "car10.mp4")
 # addr = os.path.join(combo_path, "combo7.mp4")
 # addr = os.path.join(not_car_path, "not_car11.mp4")
 
@@ -94,6 +94,7 @@ def main():
         ret, frame = cap.read()
         old_frame = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
         p0 = []
+        cmask = []
         while True:
             
             display_frames = []
@@ -125,14 +126,14 @@ def main():
             ##HERE
 
             #increase contrast
-            equ = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
+            
 
             # background subtraction
-            backsub_mask2, backsub_frame2 = back_sub(equ, background_object)
+            backsub_mask2, backsub_frame2 = back_sub(frame, background_object)
             display_frames.append(backsub_mask2) 
 
             # contour areas 
-            contour_crop4, contour_frame4 = contour_hull(equ, backsub_mask2)
+            contour_crop4, contour_frame4 = contour_hull(frame, backsub_mask2)
             display_frames.append(contour_frame4) 
 
 
@@ -164,19 +165,20 @@ def main():
             '''
             
             
-            # display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame3, equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            # display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame3, frame, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             # Get double convex hulled max
-            foreground, cmask = get_cmask(contour_frame4, equ)
-            flow_img = np.empty(cmask.shape)
+            if len(cmask) <= 0:
+                foreground, cmask = get_cmask(contour_frame4, frame)
+                flow_img = np.empty(cmask.shape)
             # Apply optic flow to foreground of cmask
-            flow_img, p0 = optic_flow(foreground, old_frame, cmask, p0)
+            flow_img, p0 = optic_flow(frame, old_frame, cmask, p0)
                 
                 # pdb.set_trace()
 
 
             # pdb.set_trace()
-            display_frames = np.asarray([equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame, contour_frame4, foreground, flow_img ])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame, contour_frame4, foreground, flow_img ])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
             # USE THIS VARIABLE TO WRAP THE WINDOW
@@ -249,7 +251,7 @@ def back_sub(frame, background_object):
     # fgmask = cv2.dilate(fgmask, kernel=None, iterations=30) # dilate
 
 
-'''This method reduces noise by applying gaussian pyramids. Pyramid up and pyramid down applied equally
+'''This method reduces noise by applying gaussian pyramids. Pyramid up and pyramid down applied frameally
 PARAMETERS:
 frame - original image to apply pyramids to
 iterations - number of times pyrUp and pyrDown should occur each
@@ -337,7 +339,7 @@ def optic_flow(frame, old_frame, mask, p0):
     mask = cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY)
     img = frame
     # If the mask is not empty
-    if not (np.array_equal(np.empty(mask.shape), mask)):
+    if not (np.array_frameal(np.empty(mask.shape), mask)):
         
         frame_gray = cv2.cvtColor(frame,
                               cv2.COLOR_BGR2GRAY)
