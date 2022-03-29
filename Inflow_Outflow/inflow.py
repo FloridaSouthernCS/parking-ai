@@ -103,7 +103,7 @@ def main():
             ret, frame = cap.read()
             if not ret: break
             display_frames.append(frame) 
-            frame = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
+
             '''Background subtraction to detect motion'''
             # Get binary mask of movement
             backsub_mask, backsub_frame = back_sub(frame, background_object)
@@ -112,31 +112,54 @@ def main():
 
             '''Contour Detection with threshold to find reigons of interest'''
             # Get an enhanced mask by thresholding reigons of interest by sizes of white pixel areas
-            # contour_det_crop, contour_det = contour_detection(frame, backsub_mask)
-            # display_frames.append(contour_det) 
+            contour_crop, contour_frame = contour_detection(frame, backsub_mask)
+            display_frames.append(contour_frame) 
 
-            # contour_app_crop, contour_app = contour_approx(frame, backsub_mask)
-            # display_frames.append(contour_app) 
+            contour_crop2, contour_frame2 = contour_approx(frame, backsub_mask)
+            display_frames.append(contour_frame2) 
 
-            # contour_hull_crop, contour_hul = contour_hull(frame, backsub_mask)
-            # display_frames.append(contour_hul)  
+            contour_crop3, contour_frame3 = contour_hull(frame, backsub_mask)
+            display_frames.append(contour_frame3) 
+
+
+        
+
+            #increase contrast
+            equ = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
+
+            # background subtraction
+            backsub_mask2, backsub_frame2 = back_sub(equ, background_object)
+            display_frames.append(backsub_mask2) 
 
             # contour areas 
-            contour_crop4, contour_frame4 = contour_hull(frame, backsub_mask)
+            contour_crop4, contour_frame4 = contour_hull(equ, backsub_mask2)
             display_frames.append(contour_frame4) 
 
+
+            
+            # display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame3, equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])#equ,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            cmask = contour_mask(np.array(contour_frame4), (0,255,0))
+            
+            _, cmask = contour_hull(equ, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+            # pdb.set_trace()
+            cmask = contour_mask(cmask, (255,255,255))
+
+            foregound = cv2.bitwise_and(equ, equ, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+            
+            # pdb.set_trace()
+            display_frames = np.asarray([equ, cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4, foregound ])
             
             
             # Get double convex hulled max
-            if len(cmask) <= 0:
-                foreground, cmask = get_cmask(contour_frame4, frame)
-                flow_img = np.empty(cmask.shape)
-            # Apply optic flow to foreground of cmask
-            flow_img, p0 = optic_flow(frame, old_frame, cmask, p0)
+            # if len(cmask) <= 0:
+            # foreground, cmask = get_cmask(contour_frame, frame)
+            # flow_img = np.empty(cmask.shape)
+            # # Apply optic flow to foreground of cmask
+            # flow_img, p0 = optic_flow(frame, old_frame, cmask, p0)
                 
 
 
-            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame4, foreground, flow_img ])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            # display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foregound])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
             # USE THIS VARIABLE TO WRAP THE WINDOW
