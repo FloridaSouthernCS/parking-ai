@@ -12,6 +12,7 @@ import tkinter as tk
 import math
 import key_log
 import record
+from optic_flow import lk_optic_flow
 
 
 '''
@@ -93,6 +94,8 @@ def main():
     try:
         ret, frame = cap.read()
         old_frame = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
+        lk_flow = lk_optic_flow(old_frame, feature_params, lk_params)
+        
         p0 = []
         cmask = []
         while True:
@@ -131,9 +134,6 @@ def main():
             # contour areas 
             contour_crop, contour_frame = contour_hull(frame_norm, backsub_mask)
 
-
-         
-            
             # Get double convex hulled max
             # if len(cmask) <= 0:
             foreground, cmask = get_cmask(contour_frame, frame)
@@ -146,6 +146,11 @@ def main():
 
             point_of_interest = frame[500:1000, 50:250] #where we want to detect the initial contour area
                 
+            #flow_img, p0 = optic_flow(frame, old_frame, cmask, p0)
+            
+            lk_flow.set_mask(cmask)
+    
+            flow_img = lk_flow.get_flow(frame)
 
 
             display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, temp])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
