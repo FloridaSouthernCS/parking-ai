@@ -125,10 +125,6 @@ def main():
 
             frame_norm = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
 
-
-
-            #increase contrast
-
             # background subtraction
             backsub_mask, backsub_frame = back_sub(frame_norm, background_object)
 
@@ -199,26 +195,16 @@ PARAMETERS:
 - frame: frame from video
 - background_object: filter to apply to frame from background subtraction''' 
 def back_sub(frame, background_object):
-    fgmask = np.copy(frame)
-    temp = np.copy(frame)
+    fgmask = frame.copy()
+    temp = frame.copy()
 
-    # fgmask = apply_pyramids(fgmask, 1)
-    
     fgmask = background_object.apply(fgmask) # apply background subtraction to frame 
     _, fgmask = cv2.threshold(fgmask, 150, 255, cv2.THRESH_BINARY) # remove the gray pixels which represent shadows
-    # fgmask = cv2.erode(fgmask, kernel=(15,15), iterations = 5)
 
     fgmask = cv2.dilate(fgmask, kernel=(25,25), iterations=5) # dilate
     foreground = cv2.bitwise_and(temp, temp, mask=fgmask) # show frame in areas in motion
 
     return fgmask, foreground
-
-
-    # OTHER METHODS
-    # sp.gaussian_filter(frame, sigma = 4) # blur
-    # cv2.erode(fgmask, kernel=(10,10), iterations=2) # erode
-    # _, fgmask = cv2.threshold(fgmask, 150, 255, cv2.THRESH_BINARY) # apply threshold
-    # fgmask = cv2.dilate(fgmask, kernel=None, iterations=30) # dilate
 
 
 '''This method reduces noise by applying gaussian pyramids. Pyramid up and pyramid down applied frameally
@@ -228,7 +214,7 @@ iterations - number of times pyrUp and pyrDown should occur each
 '''
 def apply_pyramids(frame, iterations):
 
-    pyrFrame = frame
+    pyrFrame = frame.copy()
     
     for j in range(iterations):
         pyrFrame = cv2.pyrDown(pyrFrame)
@@ -292,7 +278,6 @@ def contour_mask(contour, color):
     red, green, blue = contour[:,:,0], contour[:,:,1], contour[:,:,2]
     bleh = ~ ((red == r1) | (green == g1) | (blue == b1))
     contour[:,:,:3][bleh] = [r2, g2, b2]
-    # contour = contour.astype('uint8')
 
     temp = cv2.cvtColor(contour, cv2.COLOR_RGB2GRAY)
     _, fgmask = cv2.threshold(temp, 1, 255, cv2.THRESH_BINARY)
@@ -300,14 +285,11 @@ def contour_mask(contour, color):
     
     fgmask = cv2.cvtColor(fgmask, cv2.COLOR_GRAY2RGB)
     return fgmask
-    
-def feature_detection(initial_frame, frame):
-    
-    return None, None
 
 def optic_flow(frame, old_frame, mask, p0):
     mask = cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY)
     img = frame
+
     # If the mask is not empty
     if not (np.array_equal(np.empty(mask.shape), mask)):
         
@@ -317,7 +299,7 @@ def optic_flow(frame, old_frame, mask, p0):
                               cv2.COLOR_BGR2GRAY)
         
         if len(p0) <= 0:
-            p0 = cv2.goodFeaturesToTrack(frame_gray, mask = None,
+            p0 = cv2.goodFeaturesToTrack(frame_gray, mask = mask,
                             **feature_params)
     
         # calculate optical flow
@@ -345,19 +327,10 @@ def optic_flow(frame, old_frame, mask, p0):
             
             frame = cv2.circle(frame, (int(a), int(b)), 5,
                             color[i].tolist(), -1)
-        # pdb.set_trace()
+        
         img = cv2.add(frame, draw_mask)
 
     return img.astype(np.uint8), p0
-
-def clustering(initial_frame, frame):
-    return None, None
-
-def track_features(initial_frame, frame):
-    return None, None
-
-def track_clusters(initial_frame, frame):
-    return None, None
 
 
 '''This method is used to format the final output window
