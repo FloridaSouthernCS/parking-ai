@@ -13,6 +13,7 @@ import math
 import key_log
 import record
 from optic_flow import lk_optic_flow
+import imutils
 
 
 '''
@@ -42,12 +43,12 @@ not_car_path = os.path.join(datapath, "Not_Car")
 
 
 addr = os.path.join(car_path, "car6.mp4")
+addr = os.path.join(car_path, "car10.mp4")
 # addr = os.path.join(combo_path, "combo7.mp4")
 # addr = os.path.join(not_car_path, "not_car11.mp4")
 
 
 # PARAMETERS
-VAR_THRESHOLD = 200 # BACKGROUND SUB PARAMETER
 
 CONTOUR_THRESHOLD = 7000 # COUNTOR THRESHOLD FOR CONTOUR AREA
 
@@ -133,10 +134,12 @@ def main():
 
             # contour areas 
             contour_crop, contour_frame = contour_hull(frame_norm, backsub_mask)
+            contour_crop, contour_frame, frame2 = contour_hull(frame_norm, backsub_mask)
 
             # Get double convex hulled max
             # if len(cmask) <= 0:
             foreground, cmask = get_cmask(contour_frame, frame)
+            foreground, cmask, frame2 = get_cmask(contour_frame, frame)
             flow_img = np.empty(cmask.shape)
             # Apply optic flow to foreground of cmask
             # flow_img, p0 = optic_flow(frame, old_frame, cmask, p0)
@@ -154,6 +157,7 @@ def main():
 
 
             display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, temp])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, temp, frame2])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
             # USE THIS VARIABLE TO WRAP THE WINDOW
@@ -191,12 +195,14 @@ def get_cmask(contour_frame, frame):
     cmask = contour_mask(np.array(contour_frame), (0,255,0))
             
     _, cmask = contour_hull(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+    _, cmask, frame2 = contour_hull(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
     # pdb.set_trace()
     cmask = contour_mask(cmask, (255,255,255))
 
     foreground = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
 
     return foreground, cmask
+    return foreground, cmask, frame2
     
 
 
@@ -268,8 +274,32 @@ def contour_approx(frame, fgmask):
     return None, contour_frame
 def contour_hull(frame, fgmask):
     contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
+    contours,_ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
     contour_frame = frame.copy()
+    frame2 = frame.copy()
 
+    cnts= cv2.findContours(fgmask.copy(), cv2.RETR_EXTERNAL,cv2. CHAIN_APPROX_SIMPLE)
+    # pdb.set_trace()
+    cnts= imutils.grab_contours(cnts)
+    if (len(cnts) > 0):
+        ce= max(cnts, key=cv2. contourArea)
+
+        extLeft = tuple(ce[ce[:, :, 0].argmin()][0])
+        extRight = tuple(ce[ce[:, :, 0].argmax()][0])
+        extTop = tuple(ce[ce[:, :, 1].argmin()][0])
+        extBot = tuple(ce[ce[:, :, 1].argmax()][0])
+        cv2.circle(contour_frame, extLeft, 8, (0, 0, 255), -1)
+        cv2.circle(contour_frame, extRight, 8, (0, 255, 0), -1)
+        cv2.circle(contour_frame, extTop, 8, (255, 0, 0), -1)
+        cv2.circle(contour_frame, extBot, 8, (255, 255, 0), -1)
+
+        cv2.circle(frame2, extLeft, 8, (0, 0, 255), -1)
+        cv2.circle(frame2, extRight, 8, (0, 255, 0), -1)
+        cv2.circle(frame2, extTop, 8, (255, 0, 0), -1)
+        cv2.circle(frame2, extBot, 8, (255, 255, 0), -1)
+    
+
+    # pdb.set_trace()
     count = 0
     for c in contours:
         if cv2.contourArea(c) > CONTOUR_THRESHOLD:
@@ -279,6 +309,7 @@ def contour_hull(frame, fgmask):
             cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
     
     return None, contour_frame
+    return None, contour_frame, frame2
 
 def contour_mask(contour, color):
     
