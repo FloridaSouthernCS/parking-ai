@@ -49,7 +49,7 @@ addr = os.path.join(car_path, "car10.mp4")
 
 
 # PARAMETERS
-
+VAR_THRESHOLD = 200
 CONTOUR_THRESHOLD = 7000 # COUNTOR THRESHOLD FOR CONTOUR AREA
 
 
@@ -133,12 +133,10 @@ def main():
             backsub_mask, backsub_frame = back_sub(frame_norm, background_object)
 
             # contour areas 
-            contour_crop, contour_frame = contour_hull(frame_norm, backsub_mask)
             contour_crop, contour_frame, frame2 = contour_hull(frame_norm, backsub_mask)
 
             # Get double convex hulled max
             # if len(cmask) <= 0:
-            foreground, cmask = get_cmask(contour_frame, frame)
             foreground, cmask, frame2 = get_cmask(contour_frame, frame)
             flow_img = np.empty(cmask.shape)
             # Apply optic flow to foreground of cmask
@@ -156,7 +154,7 @@ def main():
             flow_img = lk_flow.get_flow(frame)
 
 
-            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, temp])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            # display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, temp])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
             display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, temp, frame2])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
@@ -194,14 +192,14 @@ def main():
 def get_cmask(contour_frame, frame):
     cmask = contour_mask(np.array(contour_frame), (0,255,0))
             
-    _, cmask = contour_hull(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+    # _, cmask = contour_hull(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
     _, cmask, frame2 = contour_hull(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
     # pdb.set_trace()
     cmask = contour_mask(cmask, (255,255,255))
 
     foreground = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
 
-    return foreground, cmask
+    # return foreground, cmask
     return foreground, cmask, frame2
     
 
@@ -308,7 +306,7 @@ def contour_hull(frame, fgmask):
             # saves.append(hull)
             cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
     
-    return None, contour_frame
+    # return None, contour_frame
     return None, contour_frame, frame2
 
 def contour_mask(contour, color):
