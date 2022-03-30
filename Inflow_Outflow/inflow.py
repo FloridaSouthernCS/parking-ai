@@ -40,7 +40,7 @@ not_car_path = os.path.join(datapath, "Not_Car")
 
 
 
-addr = os.path.join(car_path, "car10.mp4")
+addr = os.path.join(car_path, "car6.mp4")
 # addr = os.path.join(combo_path, "combo7.mp4")
 # addr = os.path.join(not_car_path, "not_car11.mp4")
 
@@ -139,11 +139,16 @@ def main():
             foreground, cmask = get_cmask(contour_frame, frame)
             flow_img = np.empty(cmask.shape)
             # Apply optic flow to foreground of cmask
-            flow_img, p0 = optic_flow(frame, old_frame, cmask, p0)
+            # flow_img, p0 = optic_flow(frame, old_frame, cmask, p0)
+
+            temp = frame.copy()
+            cv2.rectangle(temp, (500,50), (1000,450), (0,0,255), 2)
+
+            point_of_interest = frame[500:1000, 50:250] #where we want to detect the initial contour area
                 
 
 
-            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, flow_img])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, temp])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
             # USE THIS VARIABLE TO WRAP THE WINDOW
