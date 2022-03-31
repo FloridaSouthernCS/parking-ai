@@ -2,6 +2,7 @@
 # from lib2to3.pgen2.token import frameAL
 # from logging import captureWarnings
 # from operator import xor
+from turtle import left
 import cv2 
 import os
 # from cv2 import threshold
@@ -14,6 +15,9 @@ import key_log
 import record
 from optic_flow import lk_optic_flow
 import imutils
+
+from shapely.geometry import Point
+from shapely.geometry.polygon import Polygon
 
 
 '''
@@ -125,37 +129,38 @@ def main():
             # contour_hull_crop, contour_hull_frame = contour_hull(frame, backsub_mask)
             # display_frames.append(contour_hull_frame) 
 
-            # frame_temp = np.copy(frame)
 
             frame_norm = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
+
+            # grabbing area of interest (contour area should start tracking)
+            bounding_rect = frame_norm.copy()
+            cv2.rectangle(bounding_rect, (500,50), (1000,450), (0,0,255), 2)
 
             # background subtraction
             backsub_mask, backsub_frame = back_sub(frame_norm, background_object)
 
             # contour areas 
-            contour_crop, contour_frame, frame2 = contour_hull(frame_norm, backsub_mask)
+            contour_crop, contour_frame, right_point, frame_norm = contour_hull(frame_norm, backsub_mask)
 
             # Get double convex hulled max
             # if len(cmask) <= 0:
-            foreground, cmask, frame2 = get_cmask(contour_frame, frame)
+            foreground, cmask, right_point, frame_norm = get_cmask(contour_frame, frame)
             flow_img = np.empty(cmask.shape)
-            # Apply optic flow to foreground of cmask
-            # flow_img, p0 = optic_flow(frame, old_frame, cmask, p0)
 
-            temp = frame.copy()
-            cv2.rectangle(temp, (500,50), (1000,450), (0,0,255), 2)
+            
 
-            point_of_interest = frame[500:1000, 50:250] #where we want to detect the initial contour area
-                
-            #flow_img, p0 = optic_flow(frame, old_frame, cmask, p0)
+            # point_of_interest = frame[500:1000, 50:250] #where we want to detect the initial contour area
+            
+            # check if left most point of rectangle is in the area of interest 
+            point = Point(right_point)
+            area_of_interest = Polygon([(500, 50), (500, 450), (1000, 450), (1000, 50)])
+            print(area_of_interest.contains(point)) # condition for starting optic flow
             
             lk_flow.set_mask(cmask)
-    
-            flow_img = lk_flow.get_flow(frame)
+            flow_img = lk_flow.get_flow(frame_norm.copy())
 
-
-            # display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, temp])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
-            display_frames = np.asarray([frame, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, temp, frame2])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            cv2.rectangle(contour_frame, (500,50), (1000,450), (0,0,255), 2)
+            display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, flow_img])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
             # USE THIS VARIABLE TO WRAP THE WINDOW
@@ -192,15 +197,13 @@ def main():
 def get_cmask(contour_frame, frame):
     cmask = contour_mask(np.array(contour_frame), (0,255,0))
             
-    # _, cmask = contour_hull(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
-    _, cmask, frame2 = contour_hull(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
-    # pdb.set_trace()
+    _, cmask, right_point, frame_norm = contour_hull(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
     cmask = contour_mask(cmask, (255,255,255))
 
     foreground = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
 
     # return foreground, cmask
-    return foreground, cmask, frame2
+    return foreground, cmask, right_point, frame_norm
     
 
 
@@ -270,14 +273,15 @@ def contour_approx(frame, fgmask):
             approx = cv2.approxPolyDP(c, epsilon, True)
             cv2.drawContours(contour_frame, [approx], 0, (0, 255, 0), 3)
     return None, contour_frame
-def contour_hull(frame, fgmask):
-    contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
-    contours,_ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
-    contour_frame = frame.copy()
-    frame2 = frame.copy()
 
-    cnts= cv2.findContours(fgmask.copy(), cv2.RETR_EXTERNAL,cv2. CHAIN_APPROX_SIMPLE)
-    # pdb.set_trace()
+def contour_hull(frame, fgmask):
+
+    contour_frame = frame.copy()
+    extLeft = 0
+
+    contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
+    cnts = cv2.findContours(fgmask.copy(), cv2.RETR_EXTERNAL,cv2. CHAIN_APPROX_SIMPLE)
+
     cnts= imutils.grab_contours(cnts)
     if (len(cnts) > 0):
         ce= max(cnts, key=cv2. contourArea)
@@ -290,11 +294,6 @@ def contour_hull(frame, fgmask):
         cv2.circle(contour_frame, extRight, 8, (0, 255, 0), -1)
         cv2.circle(contour_frame, extTop, 8, (255, 0, 0), -1)
         cv2.circle(contour_frame, extBot, 8, (255, 255, 0), -1)
-
-        cv2.circle(frame2, extLeft, 8, (0, 0, 255), -1)
-        cv2.circle(frame2, extRight, 8, (0, 255, 0), -1)
-        cv2.circle(frame2, extTop, 8, (255, 0, 0), -1)
-        cv2.circle(frame2, extBot, 8, (255, 255, 0), -1)
     
 
     # pdb.set_trace()
@@ -307,7 +306,7 @@ def contour_hull(frame, fgmask):
             cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
     
     # return None, contour_frame
-    return None, contour_frame, frame2
+    return None, contour_frame,  extRight, frame
 
 def contour_mask(contour, color):
     
