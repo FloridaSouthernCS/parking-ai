@@ -222,24 +222,6 @@ def back_sub(frame, background_object):
     foreground = cv2.bitwise_and(temp, temp, mask=fgmask) # show frame in areas in motion
 
     return fgmask, foreground
-
-
-'''This method reduces noise by applying gaussian pyramids. Pyramid up and pyramid down applied frameally
-PARAMETERS:
-frame - original image to apply pyramids to
-iterations - number of times pyrUp and pyrDown should occur each
-'''
-def apply_pyramids(frame, iterations):
-
-    pyrFrame = frame.copy()
-    
-    for j in range(iterations):
-        pyrFrame = cv2.pyrDown(pyrFrame)
-
-    for i in range(iterations):
-        pyrFrame = cv2.pyrUp(pyrFrame)
-     
-    return pyrFrame
     
  
 '''This method draws the rectangles around areas of detected motion
@@ -323,52 +305,6 @@ def contour_mask(contour, color):
     
     fgmask = cv2.cvtColor(fgmask, cv2.COLOR_GRAY2RGB)
     return fgmask
-
-def optic_flow(frame, old_frame, mask, p0):
-    mask = cv2.cvtColor(mask, cv2.COLOR_RGB2GRAY)
-    img = frame
-
-    # If the mask is not empty
-    if not (np.array_equal(np.empty(mask.shape), mask)):
-        
-        frame_gray = cv2.cvtColor(frame,
-                              cv2.COLOR_BGR2GRAY)
-        old_gray = cv2.cvtColor(old_frame,
-                              cv2.COLOR_BGR2GRAY)
-        
-        if len(p0) <= 0:
-            p0 = cv2.goodFeaturesToTrack(frame_gray, mask = mask,
-                            **feature_params)
-    
-        # calculate optical flow
-        p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray,
-                                            frame_gray,
-                                            p0, None,
-                                            **lk_params)
-        
-        # Select good points
-        try:
-            good_new = p1[st == 1]
-            good_old = p0[st == 1]
-        except Exception as e:
-            pass
-        
-        
-        # draw the tracks
-        for i, (new, old) in enumerate(zip(good_new, 
-                                        good_old)):
-            a, b = new.ravel()
-            f, d = old.ravel()
-           
-            draw_mask = cv2.line(np.zeros_like(old_frame), (int(a), int(b)), (int(f), int(d)),
-                            color[i].tolist(), 2)
-            
-            frame = cv2.circle(frame, (int(a), int(b)), 5,
-                            color[i].tolist(), -1)
-        
-        img = cv2.add(frame, draw_mask)
-
-    return img.astype(np.uint8), p0
 
 
 '''This method is used to format the final output window
