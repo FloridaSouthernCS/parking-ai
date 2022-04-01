@@ -157,7 +157,7 @@ def main():
             print(area_of_interest.contains(point)) # condition for starting optic flow
             
             lk_flow.set_mask(cmask)
-            flow_img = lk_flow.get_flow(frame_norm.copy())
+            flow_img = lk_flow.get_flow(frame_norm.copy(), right_point)
 
             cv2.rectangle(contour_frame, (500,50), (1000,450), (0,0,255), 2)
             display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, flow_img])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])

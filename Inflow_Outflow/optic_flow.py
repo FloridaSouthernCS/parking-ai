@@ -15,10 +15,10 @@ class lk_optic_flow:
         if type(mask) == type(None): mask = np.zeros(first_frame.shape)
         self.mask = mask
 
-    def get_flow(self, frame):
+    def get_flow(self, frame, right_point):
         self.old_frame = self.new_frame
         self.new_frame = frame
-        flow_frame = self.__lk_flow()
+        flow_frame = self.__lk_flow(right_point)
         return flow_frame
 
     def set_mask(self, mask):
@@ -40,7 +40,7 @@ class lk_optic_flow:
             return cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         return cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
   		
-    def __lk_flow(self):
+    def __lk_flow(self, right_point):
         frame = self.new_frame
         old_frame = self.old_frame
 
@@ -60,34 +60,58 @@ class lk_optic_flow:
             #     print('t')
             #     p0 = cv2.goodFeaturesToTrack(frame_gray, mask = None,
             #                     **self.feature_params)
-            p0 = self.__reset_p0()
+            # p0 = self.__reset_p0()
+            # pdb.set_trace()
+            p0 = np.asarray([[right_point[0], right_point[1]]]).astype('float32')
         
             # calculate optical flow
-            p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray,
-                                                frame_gray,
-                                                p0, None,
-                                                **self.lk_params)
+            p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray,frame_gray,p0, None, **self.lk_params)
+            # pdb.set_trace()
             
             # Select good points
+            # try:
+            #     good_new = p1[st == 1]
+            #     good_old = p0[st == 1]
+            # except Exception as e:
+            #     pass
+
             try:
-                good_new = p1[st == 1]
-                good_old = p0[st == 1]
+                good_new = p1[0]
+                good_old = p1[0]
             except Exception as e:
                 pass
             
+
+
+
+            a, b = p1[0][0], p1[0][1]
+            f, d = p0[0][0], p0[0][1]
+
+            # pdb.set_trace()
+
+
+            draw_mask = cv2.line(np.zeros_like(old_frame), (int(a), int(b)), (int(f), int(d)),
+                                (0,0,255), 7)
+                
+            frame = cv2.circle(frame, (int(a), int(b)), 8,
+                            (0,0,255), -1)
+            
+            
+            
             
             # draw the tracks
-            for i, (new, old) in enumerate(zip(good_new, 
-                                            good_old)):
-                a, b = new.ravel()
-                f, d = old.ravel()
+            # for i, (new, old) in enumerate(zip(good_new, 
+            #                                 good_old)):
+            #     pdb.set_trace()
+            #     a, b = new.ravel()
+            #     f, d = old.ravel()
             
-                draw_mask = cv2.line(np.zeros_like(old_frame), (int(a), int(b)), (int(f), int(d)),
-                                color[i].tolist(), 2)
+            #     draw_mask = cv2.line(np.zeros_like(old_frame), (int(a), int(b)), (int(f), int(d)),
+            #                     color[i].tolist(), 2)
                 
-                frame = cv2.circle(frame, (int(a), int(b)), 5,
-                                color[i].tolist(), -1)
-            # pdb.set_trace()
+            #     frame = cv2.circle(frame, (int(a), int(b)), 5,
+            #                     color[i].tolist(), -1)
+            # # pdb.set_trace()
             img = cv2.add(frame, draw_mask).astype(np.uint8)
         
         return img
