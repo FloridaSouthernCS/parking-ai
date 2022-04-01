@@ -1,11 +1,8 @@
-# backsub_w_contour.py
-# from lib2to3.pgen2.token import frameAL
-# from logging import captureWarnings
-# from operator import xor
+# inflow_main.py
+
 import cv2 
 import os
-# from cv2 import threshold
-# import scipy.ndimage as sp
+
 import numpy as np 
 import tkinter as tk
 import key_log
@@ -38,8 +35,6 @@ not_car_path = os.path.join(datapath, "Not_Car")
 # addr = os.path.join(combo_path, "combo5.mp4")
 # addr = os.path.join(not_car_path, "not_car10.mp4")
 
-
-
 addr = os.path.join(car_path, "car6.mp4")
 addr = os.path.join(car_path, "car10.mp4")
 # addr = os.path.join(combo_path, "combo7.mp4")
@@ -71,6 +66,8 @@ color = np.random.randint(0, 255, (100, 3))
 root = tk.Tk()
 screen_width = root.winfo_screenwidth()
 screen_height = root.winfo_screenheight()
+
+
 def main():
     # Create key_log object to control what video is processed
     print("Controls: ")
@@ -90,6 +87,7 @@ def main():
     # Get R.O.I. tool
     background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=VAR_THRESHOLD, detectShadows=False) 
     
+
     try:
         
         ret, frame = cap.read()
@@ -100,32 +98,17 @@ def main():
         cmask = []
         while True:
             
-            display_frames = []
-
-            '''Extract image from input mp4 video file'''
+            # Extract image from input mp4 video file
             ret, frame = cap.read()
             if not ret: break
-            display_frames.append(frame) 
+            frame_norm = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
 
 
-            '''Background subtraction to detect motion'''
+            # Background subtraction to detect motion
             # # Get binary mask of movement
             backsub_mask1, backsub_frame1 = back_sub(frame, background_object)
 
-
-            '''Contour Detection with threshold to find reigons of interest'''
-            # Get an enhanced mask by thresholding reigons of interest by sizes of white pixel areas
-            # contour_detection_crop, contour_detection_frame = contour_detection(frame, backsub_mask)
-            # display_frames.append(contour_detection_frame) 
-
-            # contour_approx_crop, contour_approx_frame = contour_approx(frame, backsub_mask)
-            # display_frames.append(contour_approx_frame) 
-
-            # contour_hull_crop, contour_hull_frame = contour_hull(frame, backsub_mask)
-            # display_frames.append(contour_hull_frame) 
-
-
-            frame_norm = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
+            
 
             # grabbing area of interest (contour area should start tracking)
             bounding_rect = frame_norm.copy()
@@ -159,7 +142,6 @@ def main():
                 display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, flow_img])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
             else: 
                 cv2.rectangle(contour_frame, (500,50), (1000,450), (0,0,255), 2)
-
                 display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''

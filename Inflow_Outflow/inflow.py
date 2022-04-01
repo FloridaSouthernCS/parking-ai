@@ -1,73 +1,16 @@
-# backsub_w_contour.py
-# from lib2to3.pgen2.token import frameAL
-# from logging import captureWarnings
-# from operator import xor
+# inflow.py
+
 from turtle import left
 import cv2 
 import os
-# from cv2 import threshold
-# import scipy.ndimage as sp
 import pdb
 import numpy as np 
-import tkinter as tk
 import math
-import key_log
-import record
-from optic_flow import lk_optic_flow
 import imutils
-
-from shapely.geometry import Point
-from shapely.geometry.polygon import Polygon
-
-# FILEPATHS 
-main_path = os.path.dirname(os.path.abspath(__file__)) 
-
-save_folder = "Inflow_Results"
-save_path = os.path.join(main_path, save_folder)
-
-datapath = os.path.join(main_path, "Data", "Inflow")
-
-car_path = os.path.join(datapath, "Car")
-combo_path = os.path.join(datapath, "Combo")
-not_car_path = os.path.join(datapath, "Not_Car")
-
-# addr = os.path.join(car_path, "car1.mp4")
-# addr = os.path.join(combo_path, "combo5.mp4")
-# addr = os.path.join(not_car_path, "not_car10.mp4")
-
-
-
-addr = os.path.join(car_path, "car6.mp4")
-addr = os.path.join(car_path, "car10.mp4")
-# addr = os.path.join(combo_path, "combo7.mp4")
-# addr = os.path.join(not_car_path, "not_car11.mp4")
 
 
 # PARAMETERS
-VAR_THRESHOLD = 200
 CONTOUR_THRESHOLD = 7000 # COUNTOR THRESHOLD FOR CONTOUR AREA
-
-
-# KANADE PARAMETERS
-# params for corner detection
-feature_params = dict( maxCorners = 50,
-                       qualityLevel = 0.3,
-                       minDistance = 7,
-                       blockSize = 7 )
-  
-# Parameters for lucas kanade optical flow
-lk_params = dict( winSize = (15, 15),
-                  maxLevel = 2,
-                  criteria = (cv2.TERM_CRITERIA_EPS | cv2.TERM_CRITERIA_COUNT,
-                              10, 0.03))
-  
-# Create some random colors
-color = np.random.randint(0, 255, (100, 3))
-
-# Get screen resolution
-root = tk.Tk()
-screen_width = root.winfo_screenwidth()
-screen_height = root.winfo_screenheight()
 
 
 def get_cmask(contour_frame, frame):
@@ -135,8 +78,7 @@ def contour_approx(frame, fgmask):
 def contour_hull(frame, fgmask):
 
     contour_frame = frame.copy()
-    extLeft = 0
-    extRight = 0
+    
     flag = False 
 
     contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contourss
@@ -156,20 +98,26 @@ def contour_hull(frame, fgmask):
             # saves.append(hull)
             cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
 
+    extLeft, extRight, extTop, extBot = None, None, None, None
     if (len(cnts) > 0 and flag):
-        ce= max(cnts, key=cv2.contourArea)
-
-        extLeft = tuple(ce[ce[:, :, 0].argmin()][0])
-        extRight = tuple(ce[ce[:, :, 0].argmax()][0])
-        extTop = tuple(ce[ce[:, :, 1].argmin()][0])
-        extBot = tuple(ce[ce[:, :, 1].argmax()][0])
-        cv2.circle(contour_frame, extLeft, 8, (0, 0, 255), -1)
-        cv2.circle(contour_frame, extRight, 8, (0, 255, 0), -1)
-        cv2.circle(contour_frame, extTop, 8, (255, 0, 0), -1)
-        cv2.circle(contour_frame, extBot, 8, (255, 255, 0), -1)
-        
-    # return None, contour_frame
+        extLeft, extRight, extTop, extBot = get_extreme_points(cnts)
+        contour_frame = draw_points(contour_frame, [extLeft, extRight, extTop, extBot])
+    
     return None, contour_frame,  extRight, extLeft, frame
+
+def draw_points(contour_frame, points):
+    for point in points:
+        contour_frame = cv2.circle(contour_frame, point, 8, (0, 0, 255), -1)
+    return contour_frame
+
+def get_extreme_points(cnts):
+    ce= max(cnts, key=cv2.contourArea)
+
+    extLeft = tuple(ce[ce[:, :, 0].argmin()][0])
+    extRight = tuple(ce[ce[:, :, 0].argmax()][0])
+    extTop = tuple(ce[ce[:, :, 1].argmin()][0])
+    extBot = tuple(ce[ce[:, :, 1].argmax()][0])
+    return extLeft, extRight, extTop, extBot
 
 def c_hull(frame, fgmask):
 
@@ -177,32 +125,16 @@ def c_hull(frame, fgmask):
     extLeft = 0
 
     contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contourss
-    # cnts = cv2.findContours(fgmask.copy(), cv2.RETR_EXTERNAL,cv2. CHAIN_APPROX_SIMPLE)
-
-    # cnts= imutils.grab_contours(cnts)
-    # if (len(cnts) > 0):
-    #     ce= max(cnts, key=cv2. contourArea)
-
-    #     extLeft = tuple(ce[ce[:, :, 0].argmin()][0])
-    #     extRight = tuple(ce[ce[:, :, 0].argmax()][0])
-    #     extTop = tuple(ce[ce[:, :, 1].argmin()][0])
-    #     extBot = tuple(ce[ce[:, :, 1].argmax()][0])
-    #     cv2.circle(contour_frame, extLeft, 8, (0, 0, 255), -1)
-    #     cv2.circle(contour_frame, extRight, 8, (0, 255, 0), -1)
-    #     cv2.circle(contour_frame, extTop, 8, (255, 0, 0), -1)
-    #     cv2.circle(contour_frame, extBot, 8, (255, 255, 0), -1)
     
-
     # pdb.set_trace()
     count = 0
     for c in contours:
         if cv2.contourArea(c) > CONTOUR_THRESHOLD:
             hull = cv2.convexHull(c)
             count += 1
-            # saves.append(hull)
+            
             cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
     
-    # return None, contour_frame
     return None, contour_frame, frame
 
 def contour_mask(contour, color):
