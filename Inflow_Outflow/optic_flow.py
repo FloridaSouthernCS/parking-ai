@@ -4,7 +4,9 @@ import cv2
 import numpy as np
 import pdb
 
+
 class lk_optic_flow:
+  
 
     def __init__(self, first_frame, feature_params, lk_params, p0=None, mask=None):
         self.old_frame = None
@@ -15,10 +17,10 @@ class lk_optic_flow:
         if type(mask) == type(None): mask = np.zeros(first_frame.shape)
         self.mask = mask
 
-    def get_flow(self, frame, left_point):
+    def get_flow(self, frame, right_point, left_point):
         self.old_frame = self.new_frame
         self.new_frame = frame
-        flow_frame = self.__lk_flow(left_point)
+        flow_frame = self.__lk_flow(right_point, left_point)
         return flow_frame
 
     def set_mask(self, mask):
@@ -40,7 +42,7 @@ class lk_optic_flow:
             return cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         return cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
   		
-    def __lk_flow(self, left_point):
+    def __lk_flow(self, right_point, left_point):
         frame = self.new_frame
         old_frame = self.old_frame
 
@@ -64,6 +66,8 @@ class lk_optic_flow:
             # pdb.set_trace()
             # p0 = np.asarray([[right_point[0], right_point[1]]]).astype('float32')
             p0 = np.asarray([[left_point[0], left_point[1]]]).astype('float32')
+           
+
 
         
             # calculate optical flow
@@ -79,7 +83,7 @@ class lk_optic_flow:
 
             try:
                 good_new = p1[0]
-                good_old = p1[0]
+                good_old = p0[0]
             except Exception as e:
                 pass
             
@@ -92,10 +96,10 @@ class lk_optic_flow:
             # pdb.set_trace()
 
 
-            draw_mask = cv2.line(np.zeros_like(old_frame), (int(a), int(b)), (int(f), int(d)),
-                                (0,0,255), 7)
+            # draw_mask = cv2.line(np.zeros_like(old_frame), (int(a), int(b)), (int(f), int(d)),
+            #                     (0,0,255), 7)
                 
-            frame = cv2.circle(frame, (int(a), int(b)), 8,
+            img = cv2.circle(frame, (int(f), int(d)), 8,
                             (0,0,255), -1)
             
             
@@ -114,7 +118,7 @@ class lk_optic_flow:
             #     frame = cv2.circle(frame, (int(a), int(b)), 5,
             #                     color[i].tolist(), -1)
             # # pdb.set_trace()
-            img = cv2.add(frame, draw_mask).astype(np.uint8)
+            # img = cv2.add(frame, draw_mask).astype(np.uint8)
         
         return img
 
