@@ -88,6 +88,7 @@ def main():
     background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=VAR_THRESHOLD, detectShadows=False) 
     
 
+
     try:
         
         ret, frame = cap.read()
@@ -98,17 +99,32 @@ def main():
         cmask = []
         while True:
             
-            # Extract image from input mp4 video file
+            display_frames = []
+
+            '''Extract image from input mp4 video file'''
             ret, frame = cap.read()
             if not ret: break
-            frame_norm = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
+            display_frames.append(frame) 
 
 
-            # Background subtraction to detect motion
+            '''Background subtraction to detect motion'''
             # # Get binary mask of movement
             backsub_mask1, backsub_frame1 = back_sub(frame, background_object)
 
-            
+
+            '''Contour Detection with threshold to find reigons of interest'''
+            # Get an enhanced mask by thresholding reigons of interest by sizes of white pixel areas
+            # contour_detection_crop, contour_detection_frame = contour_detection(frame, backsub_mask)
+            # display_frames.append(contour_detection_frame) 
+
+            # contour_approx_crop, contour_approx_frame = contour_approx(frame, backsub_mask)
+            # display_frames.append(contour_approx_frame) 
+
+            # contour_hull_crop, contour_hull_frame = contour_hull(frame, backsub_mask)
+            # display_frames.append(contour_hull_frame) 
+
+
+            frame_norm = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
 
             # grabbing area of interest (contour area should start tracking)
             bounding_rect = frame_norm.copy()
@@ -118,11 +134,11 @@ def main():
             backsub_mask, backsub_frame = back_sub(frame_norm, background_object)
 
             # contour areas 
-            contour_crop, contour_frame, right_point, left_point, frame_norm = contour_hull(frame_norm, backsub_mask)
+            contour_crop, contour_frame, right_point, left_point = contour_hull(frame_norm, backsub_mask)
 
             # Get double convex hulled max
             # if len(cmask) <= 0:
-            foreground, cmask, frame_norm = get_cmask(contour_frame, frame)
+            foreground, cmask = get_cmask(contour_frame, frame)
             flow_img = np.empty(cmask.shape)
 
             
@@ -142,6 +158,7 @@ def main():
                 display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, flow_img])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
             else: 
                 cv2.rectangle(contour_frame, (500,50), (1000,450), (0,0,255), 2)
+
                 display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''

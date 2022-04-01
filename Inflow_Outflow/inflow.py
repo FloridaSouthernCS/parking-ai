@@ -16,13 +16,13 @@ CONTOUR_THRESHOLD = 7000 # COUNTOR THRESHOLD FOR CONTOUR AREA
 def get_cmask(contour_frame, frame):
     cmask = contour_mask(np.array(contour_frame), (0,255,0))
             
-    _, cmask, frame_norm = c_hull(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+    cmask, contours = find_contours_and_draw_filled(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
     cmask = contour_mask(cmask, (255,255,255))
 
     foreground = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
 
     # return foreground, cmask
-    return foreground, cmask, frame_norm
+    return foreground, cmask
     
 
 
@@ -81,29 +81,18 @@ def contour_hull(frame, fgmask):
     
     flag = False 
 
-    contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contourss
     cnts = cv2.findContours(fgmask.copy(), cv2.RETR_EXTERNAL,cv2. CHAIN_APPROX_SIMPLE)
 
-    cnts= imutils.grab_contours(cnts)
+    cnts = imutils.grab_contours(cnts)
     
-    
-
-    # pdb.set_trace()
-    count = 0
-    for c in contours:
-        if cv2.contourArea(c) > CONTOUR_THRESHOLD:
-            flag = True 
-            hull = cv2.convexHull(c)
-            count += 1
-            # saves.append(hull)
-            cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
+    contour_frame, contours = find_contours_and_draw_filled(contour_frame, fgmask)
 
     extLeft, extRight, extTop, extBot = None, None, None, None
-    if (len(cnts) > 0 and flag):
+    if (len(cnts) > 0):
         extLeft, extRight, extTop, extBot = get_extreme_points(cnts)
         contour_frame = draw_points(contour_frame, [extLeft, extRight, extTop, extBot])
     
-    return None, contour_frame,  extRight, extLeft, frame
+    return None, contour_frame,  extRight, extLeft
 
 def draw_points(contour_frame, points):
     for point in points:
@@ -119,10 +108,9 @@ def get_extreme_points(cnts):
     extBot = tuple(ce[ce[:, :, 1].argmax()][0])
     return extLeft, extRight, extTop, extBot
 
-def c_hull(frame, fgmask):
+def find_contours_and_draw_filled(frame, fgmask):
 
     contour_frame = frame.copy()
-    extLeft = 0
 
     contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contourss
     
@@ -135,8 +123,11 @@ def c_hull(frame, fgmask):
             
             cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
     
-    return None, contour_frame, frame
+    return contour_frame, contours
 
+'''
+Takes in a regular frame with 
+'''
 def contour_mask(contour, color):
     
     r1, g1, b1 = color # Original value
