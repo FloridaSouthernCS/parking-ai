@@ -152,15 +152,20 @@ def main():
             # point_of_interest = frame[500:1000, 50:250] #where we want to detect the initial contour area
             
             # check if left most point of rectangle sis in the area of interest 
-            point = Point(right_point)
-            area_of_interest = Polygon([(500, 50), (500, 450), (1000, 450), (1000, 50)])
-            print(area_of_interest.contains(point)) # condition for starting optic flow
-            
-            lk_flow.set_mask(cmask)
-            flow_img = lk_flow.get_flow(frame_norm.copy(), right_point, left_point)
+            # if right_point != 0:
+            #     point = Point(right_point)
+            #     area_of_interest = Polygon([(500, 50), (500, 450), (1000, 450), (1000, 50)])
+            #     print(area_of_interest.contains(point)) # condition for starting optic flow
+            if left_point != 0: 
+                lk_flow.set_mask(cmask)
+                flow_img = lk_flow.get_flow(frame_norm.copy(), right_point, left_point)
 
-            cv2.rectangle(contour_frame, (500,50), (1000,450), (0,0,255), 2)
-            display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, flow_img])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+                cv2.rectangle(contour_frame, (500,50), (1000,450), (0,0,255), 2)
+                display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, flow_img])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+            else: 
+                cv2.rectangle(contour_frame, (500,50), (1000,450), (0,0,255), 2)
+
+                display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
 
             '''Display output in a practical way'''
             # USE THIS VARIABLE TO WRAP THE WINDOW
@@ -260,13 +265,28 @@ def contour_hull(frame, fgmask):
 
     contour_frame = frame.copy()
     extLeft = 0
+    extRight = 0
+    flag = False 
 
     contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contourss
     cnts = cv2.findContours(fgmask.copy(), cv2.RETR_EXTERNAL,cv2. CHAIN_APPROX_SIMPLE)
 
     cnts= imutils.grab_contours(cnts)
-    if (len(cnts) > 0):
-        ce= max(cnts, key=cv2. contourArea)
+    
+    
+
+    # pdb.set_trace()
+    count = 0
+    for c in contours:
+        if cv2.contourArea(c) > CONTOUR_THRESHOLD:
+            flag = True 
+            hull = cv2.convexHull(c)
+            count += 1
+            # saves.append(hull)
+            cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
+
+    if (len(cnts) > 0 and flag):
+        ce= max(cnts, key=cv2.contourArea)
 
         extLeft = tuple(ce[ce[:, :, 0].argmin()][0])
         extRight = tuple(ce[ce[:, :, 0].argmax()][0])
@@ -276,27 +296,7 @@ def contour_hull(frame, fgmask):
         cv2.circle(contour_frame, extRight, 8, (0, 255, 0), -1)
         cv2.circle(contour_frame, extTop, 8, (255, 0, 0), -1)
         cv2.circle(contour_frame, extBot, 8, (255, 255, 0), -1)
-    
-
-    # pdb.set_trace()
-    count = 0
-    for c in contours:
-        if cv2.contourArea(c) > CONTOUR_THRESHOLD:
-            hull = cv2.convexHull(c)
-            count += 1
-            # saves.append(hull)
-            cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
-            ce= max(cnts, key=cv2. contourArea)
-
-            extLeft = tuple(ce[ce[:, :, 0].argmin()][0])
-            extRight = tuple(ce[ce[:, :, 0].argmax()][0])
-            extTop = tuple(ce[ce[:, :, 1].argmin()][0])
-            extBot = tuple(ce[ce[:, :, 1].argmax()][0])
-            cv2.circle(contour_frame, extLeft, 8, (0, 0, 255), -1)
-            cv2.circle(contour_frame, extRight, 8, (0, 255, 0), -1)
-            cv2.circle(contour_frame, extTop, 8, (255, 0, 0), -1)
-            cv2.circle(contour_frame, extBot, 8, (255, 255, 0), -1)
-    
+        
     # return None, contour_frame
     return None, contour_frame,  extRight, extLeft, frame
 
