@@ -140,11 +140,11 @@ def main():
             backsub_mask, backsub_frame = back_sub(frame_norm, background_object)
 
             # contour areas 
-            contour_crop, contour_frame, right_point, frame_norm = contour_hull(frame_norm, backsub_mask)
+            contour_crop, contour_frame, right_point, left_point, frame_norm = contour_hull(frame_norm, backsub_mask)
 
             # Get double convex hulled max
             # if len(cmask) <= 0:
-            foreground, cmask, right_point, frame_norm = get_cmask(contour_frame, frame)
+            foreground, cmask, right_point, left_point, frame_norm = get_cmask(contour_frame, frame)
             flow_img = np.empty(cmask.shape)
 
             
@@ -157,7 +157,7 @@ def main():
             print(area_of_interest.contains(point)) # condition for starting optic flow
             
             lk_flow.set_mask(cmask)
-            flow_img = lk_flow.get_flow(frame_norm.copy(), right_point)
+            flow_img = lk_flow.get_flow(frame_norm.copy(), left_point)
 
             cv2.rectangle(contour_frame, (500,50), (1000,450), (0,0,255), 2)
             display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, flow_img])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
@@ -197,13 +197,13 @@ def main():
 def get_cmask(contour_frame, frame):
     cmask = contour_mask(np.array(contour_frame), (0,255,0))
             
-    _, cmask, right_point, frame_norm = contour_hull(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+    _, cmask, right_point, left_point, frame_norm = contour_hull(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
     cmask = contour_mask(cmask, (255,255,255))
 
     foreground = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
 
     # return foreground, cmask
-    return foreground, cmask, right_point, frame_norm
+    return foreground, cmask, right_point, left_point, frame_norm
     
 
 
@@ -288,7 +288,7 @@ def contour_hull(frame, fgmask):
             cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
     
     # return None, contour_frame
-    return None, contour_frame,  extRight, frame
+    return None, contour_frame,  extRight, extLeft, frame
 
 def contour_mask(contour, color):
     

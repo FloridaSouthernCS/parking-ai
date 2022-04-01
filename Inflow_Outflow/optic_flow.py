@@ -15,10 +15,10 @@ class lk_optic_flow:
         if type(mask) == type(None): mask = np.zeros(first_frame.shape)
         self.mask = mask
 
-    def get_flow(self, frame, right_point):
+    def get_flow(self, frame, left_point):
         self.old_frame = self.new_frame
         self.new_frame = frame
-        flow_frame = self.__lk_flow(right_point)
+        flow_frame = self.__lk_flow(left_point)
         return flow_frame
 
     def set_mask(self, mask):
@@ -40,7 +40,7 @@ class lk_optic_flow:
             return cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
         return cv2.cvtColor(frame, cv2.COLOR_GRAY2RGB)
   		
-    def __lk_flow(self, right_point):
+    def __lk_flow(self, left_point):
         frame = self.new_frame
         old_frame = self.old_frame
 
@@ -62,7 +62,9 @@ class lk_optic_flow:
             #                     **self.feature_params)
             # p0 = self.__reset_p0()
             # pdb.set_trace()
-            p0 = np.asarray([[right_point[0], right_point[1]]]).astype('float32')
+            # p0 = np.asarray([[right_point[0], right_point[1]]]).astype('float32')
+            p0 = np.asarray([[left_point[0], left_point[1]]]).astype('float32')
+
         
             # calculate optical flow
             p1, st, err = cv2.calcOpticalFlowPyrLK(old_gray,frame_gray,p0, None, **self.lk_params)
