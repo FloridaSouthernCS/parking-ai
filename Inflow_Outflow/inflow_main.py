@@ -99,12 +99,22 @@ def main():
         cmask = []
         while True:
             
-            display_frames = []
-
-            '''Extract image from input mp4 video file'''
+            ''' GET FRAME 1 '''
             ret, frame = cap.read()
             if not ret: break
-            display_frames.append(frame) 
+
+
+
+            ''' GET FRAME 2 '''
+
+
+
+            ''' GET FRAME 3 '''
+
+
+
+            ''' GET FRAME 4 '''
+
 
 
             '''Background subtraction to detect motion'''
@@ -131,15 +141,18 @@ def main():
             cv2.rectangle(bounding_rect, (500,50), (1000,450), (0,0,255), 2)
 
             # background subtraction
-            backsub_mask, backsub_frame = back_sub(frame_norm, background_object)
+            backsub_mask_grey, backsub_frame = back_sub(frame_norm, background_object)
+            backsub_mask_brg = cv2.cvtColor(backsub_mask_grey, cv2.COLOR_GRAY2BGR)
 
-            # contour areas 
-            contour_crop, contour_frame, right_point, left_point = contour_hull(frame_norm, backsub_mask)
 
-            # Get double convex hulled max
-            # if len(cmask) <= 0:
-            foreground, cmask = get_cmask(contour_frame, frame)
-            flow_img = np.empty(cmask.shape)
+            foreground, cmask, contours = get_cmask(backsub_mask_grey, frame)
+ 
+            contour_crop, contour_frame, right_point, left_point = get_points_frame(frame_norm, contours)
+            #cv2.rectangle(contour_frame, (500,50), (1000,450), (0,0,255), 2)
+
+
+            
+            
 
             
 
@@ -150,45 +163,56 @@ def main():
             #     point = Point(right_point)
             #     area_of_interest = Polygon([(500, 50), (500, 450), (1000, 450), (1000, 50)])
             #     print(area_of_interest.contains(point)) # condition for starting optic flow
-            if left_point != 0: 
-                lk_flow.set_mask(cmask)
-                flow_img = lk_flow.get_flow(frame_norm.copy(), right_point, left_point)
+            # if left_point != 0: 
 
-                cv2.rectangle(contour_frame, (500,50), (1000,450), (0,0,255), 2)
-                display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground, flow_img])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
-            else: 
-                cv2.rectangle(contour_frame, (500,50), (1000,450), (0,0,255), 2)
 
-                display_frames = np.asarray([frame_norm, cv2.cvtColor(backsub_mask, cv2.COLOR_GRAY2BGR), contour_frame, foreground])#frame,  cv2.cvtColor(backsub_mask2, cv2.COLOR_GRAY2BGR), contour_frame4])
+
+            ''' GET FRAME 5 '''
+            lk_flow.set_mask(cmask)
+            flow_img = lk_flow.get_flow(frame_norm.copy(), right_point, left_point)
+
+
 
             '''Display output in a practical way'''
+            # Add to this list the frames you would like to display
+            display_frames = np.asarray([frame, frame_norm, backsub_frame, foreground, contour_frame, flow_img])
+
             # USE THIS VARIABLE TO WRAP THE WINDOW
             max_h_frames = 3
             # Format the output
             window = format_window(display_frames, max_h_frames, screen_width*.75)
-            
-            if len(frame) > 0:
-                old_frame = frame
 
             # Show image
             cv2.imshow("", window)
             cv2.waitKey(50)
-            
+
+
+
+            ''' Update loop variables '''
+            if len(frame) > 0:
+                old_frame = frame_norm
+
+
+
+            ''' Record if requested '''
             # Check if we should still be recording (and other controls)
             recording = check_log(logger, recording)
 
             if recording == True:
                 record.start_recording(window, frames)
+
+
             
         logger.stop()
     except Exception as e:
         logger.stop()
         raise e
     
-
+    ''' Save Recording if present '''
     if frames != []:
         record.save_recording(frames, save_path, "inflow_results")
     
+    ''' Stop Capture '''
     cv2.destroyAllWindows() 
     cap.release()
     

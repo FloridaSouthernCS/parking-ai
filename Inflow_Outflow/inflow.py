@@ -9,21 +9,40 @@ import math
 import imutils
 
 
+
+
 # PARAMETERS
 CONTOUR_THRESHOLD = 7000 # COUNTOR THRESHOLD FOR CONTOUR AREA
 
 
-def get_cmask(contour_frame, frame):
-    cmask = contour_mask(np.array(contour_frame), (0,255,0))
-            
-    cmask, contours = find_contours_and_draw_filled(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
-    cmask = contour_mask(cmask, (255,255,255))
+'''
+IN: 
+'''
+def get_cmask(fgmask, frame ):
 
+    # Find contours twice to merge all contours that touch
+    cmask, contours = find_contours_and_draw_filled(frame, fgmask)
+    cmask = turn_contours_into_foreground_mask(np.array(cmask), (0,255,0))     
+    cmask, contours = find_contours_and_draw_filled(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+    cmask = turn_contours_into_foreground_mask(cmask, (255,255,255))
+
+    # Show the mask applied to the original frame. Car in grayscale should appear amongst a sea of black pixels.
     foreground = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
 
-    # return foreground, cmask
-    return foreground, cmask
+    return foreground, cmask, contours
+
+def get_points_frame(frame, contours):
+  
+    points_frame = frame.copy()
+
+    # If we have contours, choose the contours we want and draw them
+    extLeft, extRight, extTop, extBot = None, None, None, None
+    if (len(contours) > 0):
+        extLeft, extRight, extTop, extBot = get_extreme_points(contours)
+        points_frame = draw_points(points_frame, [extLeft, extRight, extTop, extBot])
     
+    return None, points_frame,  extRight, extLeft
+
 
 
 '''This method applies Background Subtraction 
@@ -75,32 +94,18 @@ def contour_approx(frame, fgmask):
             cv2.drawContours(contour_frame, [approx], 0, (0, 255, 0), 3)
     return None, contour_frame
 
-def contour_hull(frame, fgmask):
-
-    contour_frame = frame.copy()
-    
-    flag = False 
-
-    cnts = cv2.findContours(fgmask.copy(), cv2.RETR_EXTERNAL,cv2. CHAIN_APPROX_SIMPLE)
-
-    cnts = imutils.grab_contours(cnts)
-    
-    contour_frame, contours = find_contours_and_draw_filled(contour_frame, fgmask)
-
-    extLeft, extRight, extTop, extBot = None, None, None, None
-    if (len(cnts) > 0):
-        extLeft, extRight, extTop, extBot = get_extreme_points(cnts)
-        contour_frame = draw_points(contour_frame, [extLeft, extRight, extTop, extBot])
-    
-    return None, contour_frame,  extRight, extLeft
 
 def draw_points(contour_frame, points):
     for point in points:
         contour_frame = cv2.circle(contour_frame, point, 8, (0, 0, 255), -1)
     return contour_frame
 
-def get_extreme_points(cnts):
-    ce= max(cnts, key=cv2.contourArea)
+''' 
+    IN: Contour 
+    OUT: Left, Right, Top, and Bottom-most points on contour
+'''
+def get_extreme_points(contours):
+    ce = max(contours, key=cv2.contourArea)
 
     extLeft = tuple(ce[ce[:, :, 0].argmin()][0])
     extRight = tuple(ce[ce[:, :, 0].argmax()][0])
@@ -128,7 +133,7 @@ def find_contours_and_draw_filled(frame, fgmask):
 '''
 Takes in a regular frame with 
 '''
-def contour_mask(contour, color):
+def turn_contours_into_foreground_mask(contour, color):
     
     r1, g1, b1 = color # Original value
     r2, g2, b2 = 0, 0, 0 # Value that we want to replace it with
