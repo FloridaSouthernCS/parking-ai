@@ -39,7 +39,7 @@ def get_points_frame(frame, fgmask):
     cnts = imutils.grab_contours(contours)
 
     # If we have contours, choose the contours we want and draw them
-    # left_point, right_point, top_point, bottom_point = None, None, None, None
+    left_point, right_point, top_point, bottom_point = None, None, None, None
     if (len(cnts) > 0):
         left_point, right_point, top_point, bottom_point = get_extreme_points(cnts)
         points_frame = draw_points(points_frame, [left_point, right_point, top_point, bottom_point])

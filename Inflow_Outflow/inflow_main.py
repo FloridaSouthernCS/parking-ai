@@ -9,6 +9,8 @@ import key_log
 import record
 from optic_flow import lk_optic_flow
 from inflow import *
+from shapely.geometry import Point, Polygon
+
 
 
 '''
@@ -148,7 +150,13 @@ def main():
             foreground, cmask, contours = get_cmask(backsub_mask_grey, frame)
  
             contour_crop, contour_frame, right_point, left_point = get_points_frame(frame_norm, backsub_mask_grey)
-            #cv2.rectangle(contour_frame, (500,50), (1000,450), (0,0,255), 2)
+            # cv2.rectangle(contour_frame, (600,50), (1000,450), (0,0,255), 2)
+            points = np.array([[600, 150], [950, 380], [1023, 300], [1023, 170],[850, 100]], np.int32)
+            pts = points.reshape((-1, 1, 2))
+            isClosed = True
+            color = (0,0,255)
+            thickness = 2
+            cv2.polylines(contour_frame, [pts], isClosed, color, thickness)
 
 
             
@@ -159,10 +167,11 @@ def main():
             # point_of_interest = frame[500:1000, 50:250] #where we want to detect the initial contour area
             
             # check if left most point of rectangle sis in the area of interest 
-            # if right_point != 0:
-            #     point = Point(right_point)
-            #     area_of_interest = Polygon([(500, 50), (500, 450), (1000, 450), (1000, 50)])
-            #     print(area_of_interest.contains(point)) # condition for starting optic flow
+            if right_point != 0:
+                point = Point(right_point)
+                area_of_interest = Polygon([(600, 50), (500, 450), (1000, 450), (1000, 50)])
+                print(area_of_interest.contains(point)) # condition for starting optic flow
+
             # if left_point != 0: 
 
 
