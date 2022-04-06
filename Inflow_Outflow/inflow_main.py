@@ -158,6 +158,8 @@ def main():
             thickness = 2
             cv2.polylines(contour_frame, [pts], isClosed, color, thickness)
 
+            tracking_points = np.array([[right_point], [left_point]], dtype = np.float32)
+
 
             
             
@@ -178,7 +180,7 @@ def main():
 
             ''' GET FRAME 5 '''
             lk_flow.set_mask(cmask)
-            flow_img = lk_flow.get_flow(frame_norm.copy(), right_point, left_point)
+            flow_img = lk_flow.get_flow(frame_norm.copy(), tracking_points)
 
 
 

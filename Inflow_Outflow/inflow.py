@@ -176,7 +176,7 @@ def format_window(frames, max_h_frames, max_width):
     else:
         frames = np.hstack(frames)
 
-    #pdb.set_trace()
+
     frames = np.hsplit(frames, filler_count+frame_count)
     hframeslist = []
     
