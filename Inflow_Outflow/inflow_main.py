@@ -147,13 +147,13 @@ def main():
 
             foreground, cmask, contours = get_cmask(backsub_mask_grey, frame)
  
-            contour_crop, contour_frame, right_point, left_point = get_points_frame(frame_norm, contours)
+            contour_crop, contour_frame, right_point, left_point = get_points_frame(frame_norm, backsub_mask_grey)
             #cv2.rectangle(contour_frame, (500,50), (1000,450), (0,0,255), 2)
 
 
             
             
-
+            # if right_point != 0: 
             
 
             # point_of_interest = frame[500:1000, 50:250] #where we want to detect the initial contour area

@@ -31,17 +31,38 @@ def get_cmask(fgmask, frame ):
 
     return foreground, cmask, contours
 
-def get_points_frame(frame, contours):
-  
+def get_points_frame(frame, fgmask):
+    contours = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
+    # pdb.p()
+    
     points_frame = frame.copy()
+    cnts = imutils.grab_contours(contours)
 
     # If we have contours, choose the contours we want and draw them
-    extLeft, extRight, extTop, extBot = None, None, None, None
-    if (len(contours) > 0):
-        extLeft, extRight, extTop, extBot = get_extreme_points(contours)
-        points_frame = draw_points(points_frame, [extLeft, extRight, extTop, extBot])
+    # left_point, right_point, top_point, bottom_point = None, None, None, None
+    if (len(cnts) > 0):
+        left_point, right_point, top_point, bottom_point = get_extreme_points(cnts)
+        points_frame = draw_points(points_frame, [left_point, right_point, top_point, bottom_point])
     
-    return None, points_frame,  extRight, extLeft
+    return None, points_frame, right_point, left_point
+
+''' 
+    IN: Contour 
+    OUT: Left, Right, Top, and Bottom-most points on contour
+'''
+def get_extreme_points(contours):
+    ce = max(contours, key=cv2.contourArea)
+
+    left_point = tuple(ce[ce[:, :, 0].argmin()][0])
+    right_point = tuple(ce[ce[:, :, 0].argmax()][0])
+    top_point = tuple(ce[ce[:, :, 1].argmin()][0])
+    bottom_point = tuple(ce[ce[:, :, 1].argmax()][0])
+    return left_point, right_point, top_point, bottom_point
+
+def draw_points(contour_frame, points):
+    for point in points:
+        contour_frame = cv2.circle(contour_frame, point, 8, (255, 0, 0), -1)
+    return contour_frame
 
 
 
@@ -94,24 +115,6 @@ def contour_approx(frame, fgmask):
             cv2.drawContours(contour_frame, [approx], 0, (0, 255, 0), 3)
     return None, contour_frame
 
-
-def draw_points(contour_frame, points):
-    for point in points:
-        contour_frame = cv2.circle(contour_frame, point, 8, (0, 0, 255), -1)
-    return contour_frame
-
-''' 
-    IN: Contour 
-    OUT: Left, Right, Top, and Bottom-most points on contour
-'''
-def get_extreme_points(contours):
-    ce = max(contours, key=cv2.contourArea)
-
-    extLeft = tuple(ce[ce[:, :, 0].argmin()][0])
-    extRight = tuple(ce[ce[:, :, 0].argmax()][0])
-    extTop = tuple(ce[ce[:, :, 1].argmin()][0])
-    extBot = tuple(ce[ce[:, :, 1].argmax()][0])
-    return extLeft, extRight, extTop, extBot
 
 def find_contours_and_draw_filled(frame, fgmask):
 

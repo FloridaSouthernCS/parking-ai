@@ -65,7 +65,7 @@ class lk_optic_flow:
             # p0 = self.__reset_p0()
             # pdb.set_trace()
             # p0 = np.asarray([[right_point[0], right_point[1]]]).astype('float32')
-            p0 = np.asarray([[left_point[0], left_point[1]]]).astype('float32')
+            p0 = np.asarray([[right_point[0], right_point[1]]]).astype('float32')
            
 
 
