@@ -25,23 +25,24 @@ def get_cmask(fgmask, frame ):
     cmask = turn_contours_into_foreground_mask(np.array(cmask), (0,255,0))     
     cmask, contours = find_contours_and_draw_filled(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
     cmask = turn_contours_into_foreground_mask(cmask, (255,255,255))
-
+    _, contours = find_contours_and_draw_filled(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+    print("contour num: ", len(contours))
     # Show the mask applied to the original frame. Car in grayscale should appear amongst a sea of black pixels.
     foreground = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
 
     return foreground, cmask, contours
 
-def get_points_frame(frame, fgmask):
-    contours = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
-    # pdb.p()
+def get_points_frame(frame, fgmask, contours):
+    # contours = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
+    # # pdb.p()
     
     points_frame = frame.copy()
-    cnts = imutils.grab_contours(contours)
+    # cnts = imutils.grab_contours(contours)
 
     # If we have contours, choose the contours we want and draw them
     left_point, right_point, top_point, bottom_point = None, None, None, None
-    if (len(cnts) > 0):
-        left_point, right_point, top_point, bottom_point = get_extreme_points(cnts)
+    if (len(contours) > 0):
+        left_point, right_point, top_point, bottom_point = get_extreme_points(contours)
         points_frame = draw_points(points_frame, [left_point, right_point, top_point, bottom_point])
     
     return None, points_frame, right_point, left_point
