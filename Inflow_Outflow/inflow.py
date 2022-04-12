@@ -14,66 +14,13 @@ import imutils
 # PARAMETERS
 CONTOUR_THRESHOLD = 7000 # COUNTOR THRESHOLD FOR CONTOUR AREA
 
+def back_sub(fgmask, background_object):
+    '''This method applies Background Subtraction 
+    PARAMETERS: 
+    - frame: frame from video
+    - background_object: filter to apply to frame from background subtraction''' 
 
-'''
-IN: 
-'''
-def get_cmask(fgmask, frame ):
-
-    # Find contours twice to merge all contours that touch
-    cmask, contours = find_contours_and_draw_filled(frame, fgmask)
-    cmask = turn_contours_into_foreground_mask(np.array(cmask), (0,255,0))     
-    cmask, contours = find_contours_and_draw_filled(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
-    cmask = turn_contours_into_foreground_mask(cmask, (255,255,255))
-    _, contours = find_contours_and_draw_filled(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
-    print("contour num: ", len(contours))
-    # Show the mask applied to the original frame. Car in grayscale should appear amongst a sea of black pixels.
-    foreground = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
-
-    return foreground, cmask, contours
-
-def get_points_frame(frame, fgmask, contours):
-    # contours = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
-    # # pdb.p()
-    
-    points_frame = frame.copy()
-    # cnts = imutils.grab_contours(contours)
-
-    # If we have contours, choose the contours we want and draw them
-    left_point, right_point, top_point, bottom_point = None, None, None, None
-    if (len(contours) > 0):
-        left_point, right_point, top_point, bottom_point = get_extreme_points(contours)
-        points_frame = draw_points(points_frame, [left_point, right_point, top_point, bottom_point])
-    
-    return None, points_frame, right_point, left_point
-
-''' 
-    IN: Contour 
-    OUT: Left, Right, Top, and Bottom-most points on contour
-'''
-def get_extreme_points(contours):
-    ce = max(contours, key=cv2.contourArea)
-
-    left_point = tuple(ce[ce[:, :, 0].argmin()][0])
-    right_point = tuple(ce[ce[:, :, 0].argmax()][0])
-    top_point = tuple(ce[ce[:, :, 1].argmin()][0])
-    bottom_point = tuple(ce[ce[:, :, 1].argmax()][0])
-    return left_point, right_point, top_point, bottom_point
-
-def draw_points(contour_frame, points):
-    for point in points:
-        contour_frame = cv2.circle(contour_frame, point, 8, (255, 0, 0), -1)
-    return contour_frame
-
-
-
-'''This method applies Background Subtraction 
-PARAMETERS: 
-- frame: frame from video
-- background_object: filter to apply to frame from background subtraction''' 
-def back_sub(frame, background_object):
-    fgmask = frame.copy()
-    temp = frame.copy()
+    temp = fgmask.copy()
 
     fgmask = background_object.apply(fgmask) # apply background subtraction to frame 
     _, fgmask = cv2.threshold(fgmask, 150, 255, cv2.THRESH_BINARY) # remove the gray pixels which represent shadows
@@ -82,7 +29,77 @@ def back_sub(frame, background_object):
     foreground = cv2.bitwise_and(temp, temp, mask=fgmask) # show frame in areas in motion
 
     return fgmask, foreground
+
+
+def get_cmask(fgmask, frame):
+    '''This method finds the contour areas and grab a convex hull around the contour areas. 
+    It repeats this process to group contour areas together'''
+
+    # Find contours twice to merge all contours that touch
+    cmask, contours = find_and_draw_contours(frame, fgmask)
+    cmask = contours_to_foreground_mask(np.array(cmask), (0,255,0))     
+    cmask, contours = find_and_draw_contours(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+    cmask = contours_to_foreground_mask(cmask, (255,255,255))
+    _, contours = find_and_draw_contours(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+
+    print("contour num: ", len(contours))
+
+    # Show the mask applied to the original frame. Car in grayscale should appear amongst a sea of black pixels.
+    foreground = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
+
+    return foreground, cmask, contours
+
+def find_and_draw_contours(frame, fgmask):
+    '''This method finds the contour areas a draws them is they're above a contour area threshold'''
+    contour_frame = frame.copy()
+
+    contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contourss
     
+    for c in contours:
+        if cv2.contourArea(c) > CONTOUR_THRESHOLD:
+            hull = cv2.convexHull(c)            
+            cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
+    
+    return contour_frame, contours
+
+def contours_to_foreground_mask(contour, color):
+    '''This method turns the contours areas into a foreground mask so they can be grouped'''
+    r1, g1, b1 = color # Original value
+    r2, g2, b2 = 0, 0, 0 # Value that we want to replace it with
+
+    red, green, blue = contour[:,:,0], contour[:,:,1], contour[:,:,2]
+    bleh = ~ ((red == r1) | (green == g1) | (blue == b1))
+    contour[:,:,:3][bleh] = [r2, g2, b2]
+
+    temp = cv2.cvtColor(contour, cv2.COLOR_RGB2GRAY)
+    _, fgmask = cv2.threshold(temp, 1, 255, cv2.THRESH_BINARY)
+    
+    
+    fgmask = cv2.cvtColor(fgmask, cv2.COLOR_GRAY2RGB)
+    return fgmask
+
+def get_tracking_points(frame, fgmask, contours):
+    '''This method grabs the left, right, top, and bottom points of a contour area'''
+    
+    points_frame = frame.copy()
+
+    # If we have contours, choose the contours we want and draw them
+    left_point, right_point, top_point, bottom_point = None, None, None, None
+    if (len(contours) > 0):
+        points = max(contours, key=cv2.contourArea) # grab all max points
+
+        # get top, bottom, left, right
+        left_point = tuple(points[points[:, :, 0].argmin()][0])
+        right_point = tuple(points[points[:, :, 0].argmax()][0])
+        top_point = tuple(points[points[:, :, 1].argmin()][0])
+        bottom_point = tuple(points[points[:, :, 1].argmax()][0])
+
+        for point in [left_point, right_point, top_point, bottom_point]: # draw the extreme points being tracked
+            points_frame = cv2.circle(points_frame, point, 8, (255, 0, 0), -1)
+    
+    return None, points_frame, right_point, left_point
+
+
  
 '''This method draws the rectangles around areas of detected motion
 PARAMETERS: 
@@ -117,41 +134,12 @@ def contour_approx(frame, fgmask):
     return None, contour_frame
 
 
-def find_contours_and_draw_filled(frame, fgmask):
 
-    contour_frame = frame.copy()
-
-    contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contourss
-    
-    # pdb.set_trace()
-    count = 0
-    for c in contours:
-        if cv2.contourArea(c) > CONTOUR_THRESHOLD:
-            hull = cv2.convexHull(c)
-            count += 1
-            
-            cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
-    
-    return contour_frame, contours
 
 '''
 Takes in a regular frame with 
 '''
-def turn_contours_into_foreground_mask(contour, color):
-    
-    r1, g1, b1 = color # Original value
-    r2, g2, b2 = 0, 0, 0 # Value that we want to replace it with
 
-    red, green, blue = contour[:,:,0], contour[:,:,1], contour[:,:,2]
-    bleh = ~ ((red == r1) | (green == g1) | (blue == b1))
-    contour[:,:,:3][bleh] = [r2, g2, b2]
-
-    temp = cv2.cvtColor(contour, cv2.COLOR_RGB2GRAY)
-    _, fgmask = cv2.threshold(temp, 1, 255, cv2.THRESH_BINARY)
-    
-    
-    fgmask = cv2.cvtColor(fgmask, cv2.COLOR_GRAY2RGB)
-    return fgmask
 
 
 '''This method is used to format the final output window

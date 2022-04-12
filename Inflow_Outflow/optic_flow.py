@@ -52,6 +52,7 @@ class lk_optic_flow:
         # Default img initialization for return statement
         img = frame
         
+        # pdb.set_trace()
         # If the mask is not empty
         if not (np.array_equal(np.empty(mask.shape), mask)):
             
@@ -67,8 +68,8 @@ class lk_optic_flow:
             # pdb.set_trace()
 
             # pdb.set_trace()
-            # p0 = np.asarray([[right_point[0], right_point[1]]]).astype('float32')
-            # p0 = np.asarray([[right_point[0], right_point[1]]]).astype('float32')
+            # p0 = np.asarray([[points[0], points[1]]]).astype('float32')
+            # p0 = np.asarray([[points[0], points[1]]]).astype('float32')
             self.p0 = points
             p0 = points
            
