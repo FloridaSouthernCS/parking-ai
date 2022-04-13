@@ -1,5 +1,6 @@
 # inflow_main.py
 
+from sys import displayhook
 import cv2 
 import os
 
@@ -9,8 +10,6 @@ import key_log
 import record
 from optic_flow import lk_optic_flow
 from inflow import *
-from shapely.geometry import Point, Polygon
-
 
 
 '''
@@ -105,100 +104,27 @@ def main():
             ret, frame = cap.read()
             if not ret: break
 
-
-
-            ''' GET FRAME 2 '''
-
-
-
-            ''' GET FRAME 3 '''
-
-
-
-            ''' GET FRAME 4 '''
-
-
-
-            # '''Background subtraction to detect motion'''
-            # # # Get binary mask of movement
+            '''Background subtraction to detect motion'''
             backsub_mask1, backsub_frame1 = back_sub(frame.copy(), background_object)
-
-
-            # '''Contour Detection with threshold to find reigons of interest'''
-            # # Get an enhanced mask by thresholding reigons of interest by sizes of white pixel areas
-            # # contour_detection_crop, contour_detection_frame = contour_detection(frame, backsub_mask)
-            # # display_frames.append(contour_detection_frame) 
-
-            # # contour_approx_crop, contour_approx_frame = contour_approx(frame, backsub_mask)
-            # # display_frames.append(contour_approx_frame) 
-
-            # # contour_hull_crop, contour_hull_frame = contour_hull(frame, backsub_mask)
-            # # display_frames.append(contour_hull_frame) 
-
-
             frame_norm = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
-
-            # # grabbing area of interest (contour area should start tracking)
-            # bounding_rect = frame_norm.copy()
-            # cv2.rectangle(bounding_rect, (500,50), (1000,450), (0,0,255), 2)
-
-            # # background subtraction
             backsub_mask_grey, backsub_frame = back_sub(frame_norm, background_object)
-            backsub_mask_brg = cv2.cvtColor(backsub_mask_grey, cv2.COLOR_GRAY2BGR)
 
-
+            # grab contour areas 
             foreground, cmask, contours = get_cmask(backsub_mask_grey, frame)
- 
-            contour_crop, contour_frame, right_point, left_point = get_tracking_points(frame_norm, backsub_mask_grey, contours)
-            # cv2.rectangle(contour_frame, (600,50), (1000,450), (0,0,255), 2)
-            points = np.array([[600, 150], [950, 380], [1023, 300], [1023, 170],[850, 100]], np.int32)
-            pts = points.reshape((-1, 1, 2))
-            isClosed = True
-            color = (0,0,255)
-            thickness = 2
-            cv2.polylines(contour_frame, [pts], isClosed, color, thickness)
-
-
-
-
             
-            
-            # # if right_point != 0: 
-            
+            # grab extreme points on contour areas 
+            contour_frame, tracking_points = get_tracking_points(frame_norm, backsub_mask_grey, contours)
 
-            # # point_of_interest = frame[500:1000, 50:250] #where we want to detect the initial contour area
-            
-            # # check if left most point of rectangle sis in the area of interest 
-            if right_point != 0 and right_point != None:
-                point = Point(right_point)
-                area_of_interest = Polygon([(600, 50), (500, 450), (1000, 450), (1000, 50)])
-                # print(area_of_interest.contains(point)) # condition for starting optic flow
+            # # does the right point enter the area of interest
+            # if len(tracking_points) > 0 and tracking_points[0] != None: 
+            #     print(motion_detected_in_area_of_interest(tracking_points[0]))
 
-            # # if left_point != 0: 
+            # track the points 
+            display_frames = main_optic_flow(lk_flow, cmask, frame, frame_norm, backsub_frame, foreground, contour_frame, tracking_points)
 
 
-
-            # ''' GET FRAME 5 '''
-            if right_point != None and left_point != None: 
-                tracking_points = np.array([[right_point], [left_point]], dtype = np.float32)
-                
-                lk_flow.set_mask(cmask)
-                flow_img = lk_flow.get_flow(frame_norm.copy(), tracking_points)
-                display_frames = np.asarray([frame, frame_norm, backsub_frame, foreground, contour_frame, flow_img])
-            else: 
-
-                display_frames = np.asarray([frame, frame_norm, backsub_frame, foreground, contour_frame])
-
-
-
-
-            '''Display output in a practical way'''
-            # Add to this list the frames you would like to display
-
-
-            # USE THIS VARIABLE TO WRAP THE WINDOW
+            # Format window output 
             max_h_frames = 3
-            # Format the output
             window = format_window(display_frames, max_h_frames, screen_width*.75)
 
             # Show image

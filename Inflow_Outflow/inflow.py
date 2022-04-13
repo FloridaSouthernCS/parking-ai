@@ -7,9 +7,9 @@ import pdb
 import numpy as np 
 import math
 import imutils
-
-
-
+from shapely.geometry import Point, Polygon
+from optic_flow import lk_optic_flow
+from inflow import *
 
 # PARAMETERS
 CONTOUR_THRESHOLD = 7000 # COUNTOR THRESHOLD FOR CONTOUR AREA
@@ -86,68 +86,64 @@ def get_tracking_points(frame, fgmask, contours):
     # If we have contours, choose the contours we want and draw them
     left_point, right_point, top_point, bottom_point = None, None, None, None
     if (len(contours) > 0):
-        points = max(contours, key=cv2.contourArea) # grab all max points
-
-        # get top, bottom, left, right
-        left_point = tuple(points[points[:, :, 0].argmin()][0])
-        right_point = tuple(points[points[:, :, 0].argmax()][0])
-        top_point = tuple(points[points[:, :, 1].argmin()][0])
-        bottom_point = tuple(points[points[:, :, 1].argmax()][0])
+        
+        left_point, right_point, top_point, bottom_point = get_extreme_points(contours) # grab extreme points on contours 
 
         for point in [left_point, right_point, top_point, bottom_point]: # draw the extreme points being tracked
             points_frame = cv2.circle(points_frame, point, 8, (255, 0, 0), -1)
+
+    points_frame = draw_polygon(points_frame) # draw area of interest 
+
+    return points_frame, [right_point, left_point, top_point, bottom_point]
+
+def get_extreme_points(contours):
+    '''Grab the Extreme right, left, top, and, bottom of the contour area'''
+    points = max(contours, key=cv2.contourArea) # grab all max points
+
+    # get top, bottom, left, right
+    left_point = tuple(points[points[:, :, 0].argmin()][0])
+    right_point = tuple(points[points[:, :, 0].argmax()][0])
+    top_point = tuple(points[points[:, :, 1].argmin()][0])
+    bottom_point = tuple(points[points[:, :, 1].argmax()][0])
+
+    return left_point, right_point, top_point, bottom_point
+
+def draw_polygon(points_frame):
+    '''Draws the Polygon Area of Interest on the frame'''
     
-    return None, points_frame, right_point, left_point
+    # display start area of interest in red 
+    points = np.array([[600, 150], [950, 380], [1023, 300], [1023, 170],[850, 100]], np.int32).reshape((-1, 1, 2))
+    cv2.polylines(points_frame, [points], True, (0,0,255), 2)
 
+    return points_frame 
 
- 
-'''This method draws the rectangles around areas of detected motion
-PARAMETERS: 
-- frame: frame from the video
-- fgmask: foreground mask to show which areas motion was detected '''
-def contour_detection(frame, fgmask):
+def motion_detected_in_area_of_interest(point):
+    '''This method tests if the right most point of a contour area entered into the area of iterest'''
+    if point != None:
+        point = Point(point)
+        area_of_interest = Polygon([(600, 50), (500, 450), (1000, 450), (1000, 50)])
+        return area_of_interest.contains(point)
 
-    contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
-    contour_frame = frame.copy()
+def main_optic_flow(lk_flow, cmask, frame, frame_norm, backsub_frame, foreground, contour_frame, tracking_points):
+    '''Calls the optic flow function to track the tracking'''
+    if tracking_points[0] != None and tracking_points[1] != None: 
 
-    for i in range(len(contours)): # for each contour found 
-        if cv2.contourArea(contours[i]) > CONTOUR_THRESHOLD: # if the countour area is above a # 
+        tracking_points = np.array([[tracking_points[0]], [tracking_points[1]]], dtype = np.float32)
+        lk_flow.set_mask(cmask)
+        flow_img = lk_flow.get_flow(frame_norm.copy(), tracking_points)
 
-            cv2.drawContours(contour_frame, contours, i, (0,255,0), 3)
+        display_frames = np.asarray([frame, frame_norm, backsub_frame, foreground, contour_frame, flow_img])
+    else: 
 
-            # # draw a rectangle 
-            # x, y, width, height = cv2.boundingRect(contours[i])
-            # cv2.rectangle(contour_frame, (x,y - 10), (x + width, y + height), (0,0,255), 2)
-            # cv2.putText(contour_frame, "car detected", (x,y), cv2.FONT_HERSHEY_COMPLEX, 0.3, (0, 255, 0), 1, cv2.LINE_AA)
+        display_frames = np.asarray([frame, frame_norm, backsub_frame, foreground, contour_frame])
+    return display_frames
 
-    return None, contour_frame 
-
-def contour_approx(frame, fgmask):
-    contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contours
-    contour_frame = frame.copy()
-
-    for c in contours:
-        if cv2.contourArea(c) > CONTOUR_THRESHOLD:
-            epsilon = 0.01*cv2.arcLength(c, True)
-            approx = cv2.approxPolyDP(c, epsilon, True)
-            cv2.drawContours(contour_frame, [approx], 0, (0, 255, 0), 3)
-    return None, contour_frame
-
-
-
-
-'''
-Takes in a regular frame with 
-'''
-
-
-
-'''This method is used to format the final output window
-PARAMETERS: 
-- frames: a list of all the frames which are to be displayed
-- max_h_frames: maximum horizontal frames to be displayed
-- mad_width: maximum desired pixel width for the output window '''
 def format_window(frames, max_h_frames, max_width):
+    '''This method is used to format the final output window
+    PARAMETERS: 
+    - frames: a list of all the frames which are to be displayed
+    - max_h_frames: maximum horizontal frames to be displayed
+    - mad_width: maximum desired pixel width for the output window '''
 
     filler = np.zeros(np.asarray(frames[0]).shape,dtype=np.uint8 )
     
@@ -181,10 +177,10 @@ def format_window(frames, max_h_frames, max_width):
     return window
         
 
-'''This method acts as a controller to manipulate the video feed
-PARAMETERS: 
-- logger: log object from key_log.py '''
 def check_log(logger, recording):
+    '''This method acts as a controller to manipulate the video feed
+    PARAMETERS: 
+    - logger: log object from key_log.py '''
     
     if logger.keys_clicked:
         key = logger.keys_clicked[-1]
