@@ -97,10 +97,10 @@ def get_tracking_points(frame, fgmask, contours):
     return points_frame, [right_point, left_point, top_point, bottom_point]
 
 def get_extreme_points(contours):
-    '''Grab the Extreme right, left, top, and, bottom of the contour area'''
+    '''Grab the extreme right, left, top, and bottom points of the contour area'''
     points = max(contours, key=cv2.contourArea) # grab all max points
 
-    # get top, bottom, left, right
+    # get top, bottom, left, right points
     left_point = tuple(points[points[:, :, 0].argmin()][0])
     right_point = tuple(points[points[:, :, 0].argmax()][0])
     top_point = tuple(points[points[:, :, 1].argmin()][0])
@@ -125,7 +125,7 @@ def motion_detected_in_area_of_interest(point):
         return area_of_interest.contains(point)
 
 def main_optic_flow(lk_flow, cmask, frame, frame_norm, backsub_frame, foreground, contour_frame, tracking_points):
-    '''Calls the optic flow function to track the tracking'''
+    '''Calls the optic flow function to track the tracking_points'''
     if tracking_points[0] != None and tracking_points[1] != None: 
 
         tracking_points = np.array([[tracking_points[0]], [tracking_points[1]]], dtype = np.float32)
