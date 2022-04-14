@@ -36,7 +36,7 @@ not_car_path = os.path.join(datapath, "Not_Car")
 # addr = os.path.join(combo_path, "combo5.mp4")
 # addr = os.path.join(not_car_path, "not_car10.mp4")
 
-addr = os.path.join(car_path, "car6.mp4")
+# addr = os.path.join(car_path, "car6.mp4")
 addr = os.path.join(car_path, "car10.mp4")
 # addr = os.path.join(combo_path, "combo7.mp4")
 # addr = os.path.join(not_car_path, "not_car11.mp4")
@@ -104,33 +104,33 @@ def main():
             ret, frame = cap.read()
             if not ret: break
 
-            '''Background subtraction to detect motion'''
+            ''' Background subtraction to detect motion '''
             backsub_mask1, backsub_frame1 = back_sub(frame.copy(), background_object)
             frame_norm = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
             backsub_mask_grey, backsub_frame = back_sub(frame_norm, background_object)
 
-            # grab contour areas 
+
+            ''' Get Contours '''
             foreground, cmask, contours = get_cmask(backsub_mask_grey, frame)
             
-            # grab extreme points on contour areas 
-            contour_frame, tracking_points = get_tracking_points(frame_norm, backsub_mask_grey, contours)
-
-            # # does the right point enter the area of interest
-            # if len(tracking_points) > 0 and tracking_points[0] != None: 
-            #     print(motion_detected_in_area_of_interest(tracking_points[0]))
-
-            # track the points 
-            display_frames = main_optic_flow(lk_flow, cmask, frame, frame_norm, backsub_frame, foreground, contour_frame, tracking_points)
+            # Isolate extreme points from contours
+            contour_frame, tracking_points = get_tracking_points(frame_norm, contours)
 
 
-            # Format window output 
+            ''' Get optic flow '''
+            flow_img = get_optic_flow(lk_flow, cmask, frame_norm, tracking_points)
+
+
+            ''' Display the frames '''
+            display_frames = np.asarray([frame, frame_norm, backsub_frame, foreground, contour_frame, flow_img])
+
+            # Format window output
             max_h_frames = 3
             window = format_window(display_frames, max_h_frames, screen_width*.75)
 
             # Show image
             cv2.imshow("", window)
             cv2.waitKey(50)
-
 
 
             ''' Update loop variables '''

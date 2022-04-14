@@ -78,23 +78,27 @@ def contours_to_foreground_mask(contour, color):
     fgmask = cv2.cvtColor(fgmask, cv2.COLOR_GRAY2RGB)
     return fgmask
 
-def get_tracking_points(frame, fgmask, contours):
+def zeros_frame(frame):
+    filler = np.zeros(np.asarray(frame).shape, dtype=np.uint8 )
+    return filler
+
+def get_tracking_points(frame, contours):
     '''This method grabs the left, right, top, and bottom points of a contour area'''
     
     points_frame = frame.copy()
 
     # If we have contours, choose the contours we want and draw them
-    left_point, right_point, top_point, bottom_point = None, None, None, None
+    extreme_points = []
     if (len(contours) > 0):
         
-        left_point, right_point, top_point, bottom_point = get_extreme_points(contours) # grab extreme points on contours 
+        extreme_points = get_extreme_points(contours) # grab extreme points on contours 
 
-        for point in [left_point, right_point, top_point, bottom_point]: # draw the extreme points being tracked
+        for point in extreme_points: # draw the extreme points being tracked
             points_frame = cv2.circle(points_frame, point, 8, (255, 0, 0), -1)
 
     points_frame = draw_polygon(points_frame) # draw area of interest 
 
-    return points_frame, [right_point, left_point, top_point, bottom_point]
+    return points_frame, extreme_points
 
 def get_extreme_points(contours):
     '''Grab the extreme right, left, top, and bottom points of the contour area'''
@@ -106,7 +110,7 @@ def get_extreme_points(contours):
     top_point = tuple(points[points[:, :, 1].argmin()][0])
     bottom_point = tuple(points[points[:, :, 1].argmax()][0])
 
-    return left_point, right_point, top_point, bottom_point
+    return np.array([left_point, right_point, top_point, bottom_point]) 
 
 def draw_polygon(points_frame):
     '''Draws the Polygon Area of Interest on the frame'''
@@ -124,19 +128,20 @@ def motion_detected_in_area_of_interest(point):
         area_of_interest = Polygon([(600, 50), (500, 450), (1000, 450), (1000, 50)])
         return area_of_interest.contains(point)
 
-def main_optic_flow(lk_flow, cmask, frame, frame_norm, backsub_frame, foreground, contour_frame, tracking_points):
+def get_optic_flow(lk_flow, cmask, frame, tracking_points):
+
     '''Calls the optic flow function to track the tracking_points'''
-    if tracking_points[0] != None and tracking_points[1] != None: 
-
-        tracking_points = np.array([[tracking_points[0]], [tracking_points[1]]], dtype = np.float32)
+    # pdb.set_trace()
+    flow_img = frame.copy()
+    if not type_null(tracking_points): 
         lk_flow.set_mask(cmask)
-        flow_img = lk_flow.get_flow(frame_norm.copy(), tracking_points)
+        flow_img = lk_flow.get_flow(flow_img, tracking_points)
 
-        display_frames = np.asarray([frame, frame_norm, backsub_frame, foreground, contour_frame, flow_img])
-    else: 
+    return flow_img
 
-        display_frames = np.asarray([frame, frame_norm, backsub_frame, foreground, contour_frame])
-    return display_frames
+def type_null(array):
+    is_null = type(array) == type(None) or array == []
+    return is_null
 
 def format_window(frames, max_h_frames, max_width):
     '''This method is used to format the final output window
@@ -145,7 +150,7 @@ def format_window(frames, max_h_frames, max_width):
     - max_h_frames: maximum horizontal frames to be displayed
     - mad_width: maximum desired pixel width for the output window '''
 
-    filler = np.zeros(np.asarray(frames[0]).shape,dtype=np.uint8 )
+    filler = zeros_frame(frames[0])
     
     single_frame_ratio = frames[0].shape[0]/frames[0].shape[1]
 
