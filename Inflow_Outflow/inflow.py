@@ -115,7 +115,6 @@ def get_extreme_points(contours):
 
 def get_valid_points(points, count):
     '''This counts the number of points that have hit the left side'''
-
     for i in range(len(points)):
         if points[i][0] <= 10:
             count += 1
@@ -124,12 +123,11 @@ def get_valid_points(points, count):
 
 def keep_tracking_points(tracking_points, point_count, tracking_points_threshold, keep_tracking):
     '''This method controls if the points should be tracked using optic flow'''
-    # print("keep_tracking : ", keep_tracking)
+    # if there's at least 3 points that has hit the left of the frame stop tracking
     if point_count >= tracking_points_threshold: 
-        # print("point_count : ", point_count > tracking_points_threshold)
         return False
-    elif motion_detected_in_area_of_interest(tracking_points):
-        # print("motion_detection : ", motion_detected_in_area_of_interest(tracking_points))
+    # if motion is detected in area of interest start tracking 
+    elif motion_detected_in_area_of_interest(tracking_points): 
         return True 
     return keep_tracking
 
