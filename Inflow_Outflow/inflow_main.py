@@ -36,7 +36,7 @@ not_car_path = os.path.join(datapath, "Not_Car")
 # addr = os.path.join(combo_path, "combo5.mp4")
 # addr = os.path.join(not_car_path, "not_car10.mp4")
 
-# addr = os.path.join(car_path, "car6.mp4")
+# addr = os.path.join(car_path, "car1.mp4")
 addr = os.path.join(car_path, "car10.mp4")
 # addr = os.path.join(combo_path, "combo7.mp4")
 # addr = os.path.join(not_car_path, "not_car11.mp4")
@@ -87,7 +87,9 @@ def main():
 
     # Get R.O.I. tool
     background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=VAR_THRESHOLD, detectShadows=False) 
-    
+    # prev_points = np.full((4,2), None)
+    point_count = 0
+    keep_tracking = False 
 
 
     try:
@@ -114,15 +116,20 @@ def main():
             foreground, cmask, contours = get_cmask(backsub_mask_grey, frame)
             
             # Isolate extreme points from contours
-            contour_frame, tracking_points = get_tracking_points(frame_norm, contours)
+            contour_frame, tracking_points, point_count = get_tracking_points(frame_norm, contours, point_count)
+            
+            # determine if we keep tracking the points 
+            keep_tracking = keep_tracking_points(tracking_points, point_count, 3, keep_tracking)
+
+            display_frames = np.asarray([frame, frame_norm, backsub_frame, foreground, contour_frame, frame_norm]) # display frames 
+
+            if keep_tracking == True: # optic flow keep_tracking == True 
+                ''' Get optic flow '''
+                flow_img = get_optic_flow(lk_flow, cmask, frame_norm.copy(), tracking_points)
 
 
-            ''' Get optic flow '''
-            flow_img = get_optic_flow(lk_flow, cmask, frame_norm, tracking_points)
-
-
-            ''' Display the frames '''
-            display_frames = np.asarray([frame, frame_norm, backsub_frame, foreground, contour_frame, flow_img])
+                ''' Display the frames '''
+                display_frames = np.asarray([frame, frame_norm, backsub_frame, foreground, contour_frame, flow_img])
 
             # Format window output
             max_h_frames = 3

@@ -42,7 +42,7 @@ def get_cmask(fgmask, frame):
     cmask = contours_to_foreground_mask(cmask, (255,255,255))
     _, contours = find_and_draw_contours(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
 
-    print("contour num: ", len(contours))
+    # print("contour num: ", len(contours))
 
     # Show the mask applied to the original frame. Car in grayscale should appear amongst a sea of black pixels.
     foreground = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
@@ -82,7 +82,7 @@ def zeros_frame(frame):
     filler = np.zeros(np.asarray(frame).shape, dtype=np.uint8 )
     return filler
 
-def get_tracking_points(frame, contours):
+def get_tracking_points(frame, contours, count):
     '''This method grabs the left, right, top, and bottom points of a contour area'''
     
     points_frame = frame.copy()
@@ -97,8 +97,9 @@ def get_tracking_points(frame, contours):
             points_frame = cv2.circle(points_frame, point, 8, (255, 0, 0), -1)
 
     points_frame = draw_polygon(points_frame) # draw area of interest 
+    extreme_points, count = get_valid_points(extreme_points, count)
 
-    return points_frame, extreme_points
+    return points_frame, extreme_points, count
 
 def get_extreme_points(contours):
     '''Grab the extreme right, left, top, and bottom points of the contour area'''
@@ -112,6 +113,26 @@ def get_extreme_points(contours):
 
     return np.array([left_point, right_point, top_point, bottom_point]) 
 
+def get_valid_points(points, count):
+    '''This counts the number of points that have hit the left side'''
+
+    for i in range(len(points)):
+        if points[i][0] <= 10:
+            count += 1
+
+    return points, count
+
+def keep_tracking_points(tracking_points, point_count, tracking_points_threshold, keep_tracking):
+    '''This method controls if the points should be tracked using optic flow'''
+    # print("keep_tracking : ", keep_tracking)
+    if point_count >= tracking_points_threshold: 
+        # print("point_count : ", point_count > tracking_points_threshold)
+        return False
+    elif motion_detected_in_area_of_interest(tracking_points):
+        # print("motion_detection : ", motion_detected_in_area_of_interest(tracking_points))
+        return True 
+    return keep_tracking
+
 def draw_polygon(points_frame):
     '''Draws the Polygon Area of Interest on the frame'''
     
@@ -121,17 +142,17 @@ def draw_polygon(points_frame):
 
     return points_frame 
 
-def motion_detected_in_area_of_interest(point):
+def motion_detected_in_area_of_interest(points):
     '''This method tests if the right most point of a contour area entered into the area of iterest'''
-    if point != None:
+    for point in points:
         point = Point(point)
         area_of_interest = Polygon([(600, 50), (500, 450), (1000, 450), (1000, 50)])
-        return area_of_interest.contains(point)
+        if area_of_interest.contains(point): return True
+    return False 
 
 def get_optic_flow(lk_flow, cmask, frame, tracking_points):
 
     '''Calls the optic flow function to track the tracking_points'''
-    # pdb.set_trace()
     flow_img = frame.copy()
     if not type_null(tracking_points): 
         lk_flow.set_mask(cmask)
