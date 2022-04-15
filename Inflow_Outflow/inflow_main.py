@@ -102,34 +102,61 @@ def main():
         cmask = []
         while True:
             
-            ''' GET FRAME 1 '''
+            ''' 
+            FRAME 1
+            Raw input 
+            '''
             ret, frame = cap.read()
             if not ret: break
 
-            ''' Background subtraction to detect motion '''
+            ''' 
+            FRAME 2 and 3
+            Background subtraction and Frame normalization
+            '''
             backsub_mask1, backsub_frame1 = back_sub(frame.copy(), background_object)
             frame_norm = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
             backsub_mask_grey, backsub_frame = back_sub(frame_norm, background_object)
 
-
-            ''' Get Contours '''
-            foreground, cmask, contours = get_cmask(backsub_mask_grey, frame)
+            ''' 
+            FRAME 4
+            Get Contours 
+            '''
+            contour_foreground, cmask, contours = get_cmask(backsub_mask_grey, frame)
             
-            # Isolate extreme points from contours
-            contour_frame, tracking_points, point_count = get_tracking_points(frame_norm, contours, point_count)
+            ''' 
+            FRAME 5
+            Get Extreme points 
+            '''
+            points_frame, tracking_points, point_count = get_tracking_points(frame_norm, contours, point_count) # Isolate extreme points from contours
             
+            '''
+            FRAME 6 
+            Track Movement over time of extreme points
+            '''
             # determine if we keep tracking the points 
             keep_tracking = keep_tracking_points(tracking_points, point_count, 3, keep_tracking)
 
-            display_frames = np.asarray([frame, frame_norm, backsub_frame, foreground, contour_frame, frame_norm]) # display frames 
-
-            if keep_tracking == True: # optic flow keep_tracking == True 
-                ''' Get optic flow '''
+            if keep_tracking:
                 flow_img = get_optic_flow(lk_flow, cmask, frame_norm.copy(), tracking_points)
+            else:
+                flow_img = frame_norm.copy()
+            
+
+            '''
+            FRAME 7
+            Get Center points of contours
+            '''
+            center = centers_of_contours(contours)
+            center_frame = draw_points(frame_norm.copy(), center)
+            
 
 
-                ''' Display the frames '''
-                display_frames = np.asarray([frame, frame_norm, backsub_frame, foreground, contour_frame, flow_img])
+
+
+            '''
+            Display the frames
+            '''
+            display_frames = np.asarray([frame, frame_norm, backsub_frame, contour_foreground, points_frame, flow_img, center_frame]) # display frames 
 
             # Format window output
             max_h_frames = 3

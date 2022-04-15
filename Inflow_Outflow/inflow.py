@@ -53,14 +53,14 @@ def find_and_draw_contours(frame, fgmask):
     '''This method finds the contour areas a draws them is they're above a contour area threshold'''
     contour_frame = frame.copy()
 
-    contours, _ = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contourss
-    
-    for c in contours:
+    contours = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contourss
+    cnts = imutils.grab_contours(contours)
+    for c in cnts:
         if cv2.contourArea(c) > CONTOUR_THRESHOLD:
             hull = cv2.convexHull(c)            
             cv2.drawContours(contour_frame, [hull], -1, (0, 255, 0), thickness=cv2.FILLED)
     
-    return contour_frame, contours
+    return contour_frame, cnts
 
 def contours_to_foreground_mask(contour, color):
     '''This method turns the contours areas into a foreground mask so they can be grouped'''
@@ -101,6 +101,13 @@ def get_tracking_points(frame, contours, count):
 
     return points_frame, extreme_points, count
 
+def draw_points(frame, points):
+    draw_frame = frame.copy()
+    
+    for point in points:
+        draw_frame = cv2.circle(draw_frame, point, 8, (255, 0, 0), -1)
+    return draw_frame
+
 def get_extreme_points(contours):
     '''Grab the extreme right, left, top, and bottom points of the contour area'''
     points = max(contours, key=cv2.contourArea) # grab all max points
@@ -130,6 +137,19 @@ def keep_tracking_points(tracking_points, point_count, tracking_points_threshold
     elif motion_detected_in_area_of_interest(tracking_points): 
         return True 
     return keep_tracking
+
+# Finds the center of all contours provided and returns it
+def centers_of_contours(contours):
+    # if np.array_equal(img, zeros_frame(img)):
+    #     return None
+    centers = []
+    for c in contours:
+        # compute the center of the contour
+        M = cv2.moments(c)
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+        centers.append((cX, cY)) 
+    return centers
 
 def draw_polygon(points_frame):
     '''Draws the Polygon Area of Interest on the frame'''
