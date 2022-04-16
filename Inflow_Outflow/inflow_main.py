@@ -10,6 +10,8 @@ import key_log
 import record
 from optic_flow import lk_optic_flow
 from inflow import *
+from Trackable import Trackable
+from Trackable_Manager import Trackable_Manager
 
 
 '''
@@ -97,6 +99,8 @@ def main():
         ret, frame = cap.read()
         old_frame = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
         lk_flow = lk_optic_flow(old_frame, feature_params, lk_params)
+
+        track_man = Trackable_Manager(frame)
         
         p0 = []
         cmask = []
@@ -116,7 +120,7 @@ def main():
             backsub_mask1, backsub_frame1 = back_sub(frame.copy(), background_object)
             frame_norm = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
             backsub_mask_grey, backsub_frame = back_sub(frame_norm, background_object)
-
+            # pdb.set_trace()
             ''' 
             FRAME 4
             Get Contours 
@@ -140,7 +144,6 @@ def main():
                 flow_img = get_optic_flow(lk_flow, cmask, frame_norm.copy(), tracking_points)
             else:
                 flow_img = frame_norm.copy()
-            
 
             '''
             FRAME 7
@@ -150,13 +153,16 @@ def main():
             center_frame = draw_points(frame_norm.copy(), center)
             
 
-
-
-
             '''
             Display the frames
             '''
-            display_frames = np.asarray([frame, frame_norm, backsub_frame, contour_foreground, points_frame, flow_img, center_frame]) # display frames 
+            track_man.set_frame(frame_norm)
+            trackables = track_man.get_trackables_from_contours(contours)
+            track_man.add_trackables(trackables)
+            
+            track_frame = track_man.get_trackable_frame()
+
+            display_frames = np.asarray([frame, frame_norm, backsub_frame, contour_foreground, points_frame, flow_img, center_frame, track_frame]) # display frames 
 
             # Format window output
             max_h_frames = 3

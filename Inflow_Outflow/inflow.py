@@ -41,7 +41,8 @@ def get_cmask(fgmask, frame):
     cmask, contours = find_and_draw_contours(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
     cmask = contours_to_foreground_mask(cmask, (255,255,255))
     _, contours = find_and_draw_contours(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
-
+    # cv2.imshow('a', _)
+    # cv2.waitKey()
     # print("contour num: ", len(contours))
 
     # Show the mask applied to the original frame. Car in grayscale should appear amongst a sea of black pixels.
@@ -55,6 +56,7 @@ def find_and_draw_contours(frame, fgmask):
 
     contours = cv2.findContours(fgmask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) # find contourss
     cnts = imutils.grab_contours(contours)
+    
     for c in cnts:
         if cv2.contourArea(c) > CONTOUR_THRESHOLD:
             hull = cv2.convexHull(c)            
@@ -150,6 +152,7 @@ def centers_of_contours(contours):
         cY = int(M["m01"] / M["m00"])
         centers.append((cX, cY)) 
     return centers
+
 
 def draw_polygon(points_frame):
     '''Draws the Polygon Area of Interest on the frame'''
