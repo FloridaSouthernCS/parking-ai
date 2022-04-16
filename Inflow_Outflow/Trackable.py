@@ -7,6 +7,7 @@ Trackable.py
 import numpy as np
 import random
 import cv2
+import pdb
 
 class Trackable:
 
@@ -30,6 +31,9 @@ class Trackable:
     '''
     Getters
     '''
+    def get_enabled(self):
+        return self.enabled
+
     def get_own_bimask(self, index=-1):
         # Get the contour at some point in its lifespan
         contour = self.life_contours[index]
@@ -44,10 +48,11 @@ class Trackable:
         return bimask
 
     def get_contour_points(self, index=-1):
-        return self.life_contours[index]
+        # print(len(self.life_contours))
+        return self.life_contours[index].copy()
 
     def get_TBLR_contour_points(self, index=-1):
-        points = max(self.life_contours[index], key=cv2.contourArea)
+        points = max(self.life_contours[index].copy(), key=cv2.contourArea)
 
         # get top, bottom, left, right points
         left_point = tuple(points[points[:, :, 0].argmin()][0])
@@ -58,6 +63,7 @@ class Trackable:
         return np.array([left_point, right_point, top_point, bottom_point]) 
     
     def get_center_point(self, index=-1):
+        # pdb.set_trace()
         M = cv2.moments(self.life_contours[index])
         cX = int(M["m10"] / M["m00"])
         cY = int(M["m01"] / M["m00"])
@@ -76,7 +82,9 @@ class Trackable:
         self.frame = frame
     
     def add_contour(self, contour):
-        self.life_contours.append(contour)
+        # If the last contour is not the same as the incoming one, append it
+        if not np.array_equal(self.life_contours[-1], contour):
+            self.life_contours += [contour]
 
     def disable(self):
         self.enabled = False
