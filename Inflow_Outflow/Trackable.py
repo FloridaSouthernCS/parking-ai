@@ -48,7 +48,6 @@ class Trackable:
         return bimask
 
     def get_contour_points(self, index=-1):
-        # print(len(self.life_contours))
         return self.life_contours[index].copy()
 
     def get_TBLR_contour_points(self, index=-1):
@@ -63,7 +62,6 @@ class Trackable:
         return np.array([left_point, right_point, top_point, bottom_point]) 
     
     def get_center_point(self, index=-1):
-        # pdb.set_trace()
         M = cv2.moments(self.life_contours[index])
         cX = int(M["m10"] / M["m00"])
         cY = int(M["m01"] / M["m00"])
@@ -82,9 +80,7 @@ class Trackable:
         self.frame = frame
     
     def add_contour(self, contour):
-        # If the last contour is not the same as the incoming one, append it
-        if not np.array_equal(self.life_contours[-1], contour):
-            self.life_contours += [contour]
+        self.life_contours += [contour]
 
     def disable(self):
         self.enabled = False

@@ -50,7 +50,7 @@ class Trackable_Manager:
         for c in contours:
             trackables.append(Trackable(c, self.get_frame_shape(), self.id))
             self.id += 1
-
+        
         return trackables
 
     '''
@@ -66,9 +66,9 @@ class Trackable_Manager:
         
         # The new trackables are deleted if they are determined to be an old_trackable that moved.
         # Else, they are added to new_trackables
+        
         temp = self.__validate_trackables(trackables)
         self.new_trackables = temp
-        # print(len(temp))
         
 
     '''
@@ -98,8 +98,8 @@ class Trackable_Manager:
         return intersection.any()
     
 
-    # Determines if a new frame with a new trackable is the same trackable present in the previous frame.
-    def __trackable_already_exists(self, trackable_to_point, trackable_to_cont):
+    # Checks if the center of one trackable is in the contour of a different trackable
+    def __center_in_contour(self, trackable_to_point, trackable_to_cont):
 
         center = trackable_to_point.get_center_point()
 
@@ -113,6 +113,7 @@ class Trackable_Manager:
 
         return False
 
+    # Used to transfer data from an invalid trackable to a persistent trackable
     def __absorb_trackable(self, persistent_trackable, invalid_trackable):
         
         invalid_trackable.disable()
@@ -122,35 +123,20 @@ class Trackable_Manager:
         return persistent_trackable
 
 
-    # Determine which trackables should stay in the manager
+    # Decides whether a trackable is persistent from a previous frame or brand new. This function removes trackables which have not been seen in a previous frame.
+    # Returns list of trackables that have either been updated or are new.
     def __validate_trackables(self, new_trackables):
         
         old_trackables = self.old_trackables
-        valid_trackables = []
 
-        # If we have no previous trackables, we will never enter for loop. All new tracks are valid
-        if old_trackables == []:
-            return new_trackables
+        # Modifies the new_trackables array by removing new_trackables that are actually old_trackables that moved.
+        for i in range(len(old_trackables)):
+            old_track = old_trackables[i]
+            for j in range(len(new_trackables)):
+                new_track = new_trackables[j]
+                # If the center of old is in the contour of new, update the old_trackable and add it to the return array
+                if self.__center_in_contour(old_track, new_track):
+                    old_track = self.__absorb_trackable(old_track, new_track)
+                    new_trackables[j] = old_track
 
-        '''
-        ALERT
-        - FIX THIS BUG. len(old_trackables) increases by a factor of 2
-        '''
-        print(len(old_trackables))
-
-        # If we find any trackables we deem to be the same as the one in the 
-        # previous frame, delete those trackables but assign their contours to a previous trackable
-        for old_track in old_trackables:
-            for new_track in new_trackables:
-                
-                # This new_track is not novel, keep the old_track and update it with new_track info
-                if self.__intersection_present(old_track, new_track):
-                    # Extract data from this trackable and disable it
-                    self.__absorb_trackable(old_track, new_track)
-                    # Keep the old_track valid, as it has not disappeared
-                    valid_trackables.append(old_track)
-                # This new_track is novel, make it valid
-                else:
-                    valid_trackables.append(new_track)
-
-        return valid_trackables
+        return new_trackables
