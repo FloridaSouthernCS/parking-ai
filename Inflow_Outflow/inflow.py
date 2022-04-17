@@ -110,10 +110,11 @@ def draw_points(frame, points):
         draw_frame = cv2.circle(draw_frame, point, 8, (255, 0, 0), -1)
     return draw_frame
 
+
 def get_extreme_points(contours):
     '''Grab the extreme right, left, top, and bottom points of the contour area'''
     points = max(contours, key=cv2.contourArea) # grab all max points
-
+    
     # get top, bottom, left, right points
     left_point = tuple(points[points[:, :, 0].argmin()][0])
     right_point = tuple(points[points[:, :, 0].argmax()][0])
@@ -140,18 +141,6 @@ def keep_tracking_points(tracking_points, point_count, tracking_points_threshold
         return True 
     return keep_tracking
 
-# Finds the center of all contours provided and returns it
-def centers_of_contours(contours):
-    # if np.array_equal(img, zeros_frame(img)):
-    #     return None
-    centers = []
-    for c in contours:
-        # compute the center of the contour
-        M = cv2.moments(c)
-        cX = int(M["m10"] / M["m00"])
-        cY = int(M["m01"] / M["m00"])
-        centers.append((cX, cY)) 
-    return centers
 
 
 def draw_polygon(points_frame):

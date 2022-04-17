@@ -3,7 +3,7 @@ Trackable_Manager.py
     Manage Trackable objects by getting visualizations of output from them.
 '''
 
-from Trackable import Trackable
+from Trackable import Trackable 
 import numpy as np
 import cv2
 import pdb
@@ -32,20 +32,45 @@ class Trackable_Manager:
         return contours
 
     # Returns a frame of every trackable colorized
-    def get_trackable_frame(self):
+    def get_trackable_contours_frame(self):
         draw_frame = self.frame.copy()
         for trackable in self.new_trackables:
             contour = trackable.get_contour_points()
-            # If this trackable is not disabled
-            if trackable.enabled:
-                cv2.drawContours(draw_frame, [contour], -1, trackable.get_color(), thickness=cv2.FILLED)
-        
+            
+            cv2.drawContours(draw_frame, [contour], -1, trackable.get_color(), thickness=5)
+            
         return draw_frame
+
+    # Get a frame which displays a 'flow' of traceable points
+    def get_traced_frame(self, function=Trackable.get_center_point):
+        draw_frame = self.frame.copy()
+        for trackable in self.new_trackables:
+
+            color = trackable.get_color()
+            trace_point1 = function(trackable, 0)
+            # Draw a line from position n to n+1, then n = n+1
+            for i in range(1, len(trackable.get_life_contours())):
+                
+                trace_point2 = function(trackable, i)
+                cv2.line(draw_frame, trace_point1, trace_point2, color, 5)
+                trace_point1 = function(trackable, i)
+
+            # Draw a circle at the most recent index for a traceable point
+            cv2.circle(draw_frame, function(trackable), 10, color, -1)
+        return draw_frame
+
+    # Returns a list of the left, right, top, and bottom-most points for each Trackable
+    def get_extreme_points(self):
+        points = []
+        for track in self.new_trackables:
+            points.append(track.get_LRTB_points())
+        return points
 
     def get_frame_shape(self):
         return np.asarray(self.frame).shape
 
-    def get_trackables_from_contours(self, contours):
+    # Creates new trackable objects for every contour that is present
+    def generate_trackables(self, contours):
         trackables = []
         for c in contours:
             trackables.append(Trackable(c, self.get_frame_shape(), self.id))
@@ -53,27 +78,30 @@ class Trackable_Manager:
         
         return trackables
 
+    # Returns a list of all current trackables in the most recent frame
+    def get_trackables(self):
+        return self.new_trackables
+
     '''
     Setters
     '''
-
+    # Set the frame that all trackables will be drawn onto
     def set_frame(self, frame):
         self.frame = frame
 
-    def add_trackables(self, trackables):
-        
+    # Propose a set of contours as candidates for new trackables. Returns a list the trackables it deems valid
+    def propose_trackables(self, trackables):
         self.old_trackables = self.new_trackables.copy()
-        
+
         # The new trackables are deleted if they are determined to be an old_trackable that moved.
         # Else, they are added to new_trackables
-        
-        temp = self.__validate_trackables(trackables)
-        self.new_trackables = temp
+        self.new_trackables = self.__validate_trackables(trackables)
         
 
     '''
     Private
     '''
+
     # Takes in 2 arrays of contours 
     def __intersection_present(self, trackable1, trackable2):
         contour1 = trackable1.get_contour_points()

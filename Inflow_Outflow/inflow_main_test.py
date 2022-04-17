@@ -34,14 +34,8 @@ car_path = os.path.join(datapath, "Car")
 combo_path = os.path.join(datapath, "Combo")
 not_car_path = os.path.join(datapath, "Not_Car")
 
-# addr = os.path.join(car_path, "car1.mp4")
-# addr = os.path.join(combo_path, "combo5.mp4")
-# addr = os.path.join(not_car_path, "not_car10.mp4")
+addr = os.path.join(car_path, "car9.mp4")
 
-# addr = os.path.join(car_path, "car8.mp4")
-# addr = os.path.join(car_path, "car10.mp4")
-# addr = os.path.join(combo_path, "combo7.mp4")
-addr = os.path.join(not_car_path, "not_car10.mp4")
 
 
 # PARAMETERS
@@ -107,14 +101,13 @@ def main():
         while True:
             
             ''' 
-            FRAME 1
             Raw input 
             '''
             ret, frame = cap.read()
             if not ret: break
 
             ''' 
-            FRAME 2 and 3
+            FRAME 1 and 2
             Background subtraction and Frame normalization
             '''
             backsub_mask1, backsub_frame1 = back_sub(frame.copy(), background_object)
@@ -122,31 +115,13 @@ def main():
             backsub_mask_grey, backsub_frame = back_sub(frame_norm, background_object)
          
             ''' 
-            FRAME 4
+            FRAME 3
             Get Contours 
             '''
-            contour_foreground, cmask, contours = get_cmask(backsub_mask_grey, frame)
-            
-            ''' 
-            FRAME 5
-            Get Extreme points 
-            '''
-            points_frame, tracking_points, point_count = get_tracking_points(frame_norm, contours, point_count) # Isolate extreme points from contours
-            
-            '''
-            FRAME 6 
-            Track Movement over time of extreme points
-            '''
-            # determine if we keep tracking the points 
-            keep_tracking = keep_tracking_points(tracking_points, point_count, 3, keep_tracking)
-
-            if keep_tracking:
-                flow_img = get_optic_flow(lk_flow, cmask, frame_norm.copy(), tracking_points)
-            else:
-                flow_img = frame_norm.copy()
+            contour_foreground, cmask, contours = get_cmask(backsub_mask_grey, frame_norm)
 
             '''
-            FRAME 7
+            FRAME 4
             Get Contours frame of trackables
             '''
             track_man.set_frame(frame_norm)
@@ -157,25 +132,22 @@ def main():
             # Get visualization of all the trackables
             track_frame = track_man.get_trackable_contours_frame()
             
-            '''
-            FRAME 8
-            Get centers frame of trackables
-            '''
-            # Get the center points of each trackable
-            centers = track_man.get_centers()
-            center_frame = draw_points(frame_norm.copy(), centers)
 
             '''
-            FRAME 9
+            FRAME 5
             Draw and trace the points across the screen
             '''
             traced_points_frame = track_man.get_traced_frame()
+
+            
+            for i in range(len(trackables)):
+                print(trackables[i].get_func_contour_size(func=np.max), trackables[i])
 
 
             '''
             Display the frames
             '''
-            display_frames = np.asarray([frame, frame_norm, backsub_frame, contour_foreground, track_frame, traced_points_frame]) # display frames 
+            display_frames = np.asarray([frame_norm, backsub_frame, contour_foreground, track_frame, traced_points_frame]) # display frames 
 
             # Format window output
             max_h_frames = 3
@@ -183,7 +155,7 @@ def main():
 
             # Show image
             cv2.imshow("", window)
-            cv2.waitKey(50)
+            cv2.waitKey(1)
 
             ''' Update loop variables '''
             if len(frame) > 0:
