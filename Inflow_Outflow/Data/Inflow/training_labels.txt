@@ -66,4 +66,25 @@
 -1
 1<ReferenceVideo: /Users/hannahwilberding/Documents/Documents - Hannah’s MacBook Pro/GitHub.tmp/parking-ai/Inflow_Outflow/Data/Inflow/Car/car12.mp4>
 1
+-1<ReferenceVideo: /Users/hannahwilberding/Documents/Documents - Hannah’s MacBook Pro/GitHub.tmp/parking-ai/Inflow_Outflow/Data/Inflow/Car/car13.mp4>
+-1
+-1
+-1
+1
+-1<ReferenceVideo: /Users/hannahwilberding/Documents/Documents - Hannah’s MacBook Pro/GitHub.tmp/parking-ai/Inflow_Outflow/Data/Inflow/Car/car14.mp4>
+-1
+-1
+1
+-1
+-1
+1<ReferenceVideo: /Users/hannahwilberding/Documents/Documents - Hannah’s MacBook Pro/GitHub.tmp/parking-ai/Inflow_Outflow/Data/Inflow/Car/car16.mp4>
+-1
+1<ReferenceVideo: /Users/hannahwilberding/Documents/Documents - Hannah’s MacBook Pro/GitHub.tmp/parking-ai/Inflow_Outflow/Data/Inflow/Car/car17.mp4>
+-1
+-1
+-1
+-1
+1<ReferenceVideo: /Users/hannahwilberding/Documents/Documents - Hannah’s MacBook Pro/GitHub.tmp/parking-ai/Inflow_Outflow/Data/Inflow/Car/car18.mp4>
+-1
+1
 -1
