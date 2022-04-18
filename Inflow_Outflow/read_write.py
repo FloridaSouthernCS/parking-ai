@@ -20,13 +20,15 @@ def label_data(track_man, reference_video):
     
     for trackable in track_man.get_retired_trackables():
         # This is only here to validate functions exist. Comment out when running and delete when done
-        result = input("Trackable: " + str(trackable.get_id()) + " is a car(c), not_car(n), noise([enter]): ")
+        result = input("Trackable: " + str(trackable.get_id()) + " is a car(c), not_car(n), noise([enter]), delete(d): ")
         
         # Aquire training label
         if result == "c":
             labels.append(1)
         elif result == "n":
             labels.append(0)
+        elif result == "d":
+            continue
         else:
             labels.append(-1)
 
