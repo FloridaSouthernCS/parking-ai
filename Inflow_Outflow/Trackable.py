@@ -9,6 +9,7 @@ import random
 import cv2
 import pdb
 
+
 class Trackable:
 
     def __init__(self, contour, frame_shape, id):
@@ -38,7 +39,7 @@ class Trackable:
     def get_contour_size(self, index=-1):
         return cv2.contourArea(self.life_contours[index])
 
-    def get_func_contour_size(self, start_ind=0, end_ind=-1, step=1, func=np.mean):
+    def get_func_contour_size(self, start_ind=0, end_ind=-1, step=1, function=np.mean):
         if end_ind == -1:
             end_ind = len(self.life_contours)
 
@@ -46,7 +47,7 @@ class Trackable:
         for i in range(start_ind, end_ind, step):
             sizes = np.append(sizes, self.get_contour_size(i))
 
-        mean_size = func(sizes)
+        mean_size = function(sizes)
         
         return mean_size
         
@@ -71,6 +72,14 @@ class Trackable:
     def get_life_contours(self):
         return self.life_contours
 
+    def get_life_func(self, function=None):
+        if function == None:
+            function = self.get_center_point
+        points = []
+        for i in range(len(self.life_contours)):
+            points.append(function(i))
+        return points
+
     def get_LRTB_contour_points(self, index=-1):
         
         points = max((self.life_contours[index], ), key=cv2.contourArea)
@@ -83,6 +92,9 @@ class Trackable:
         bottom_point = tuple(points[points[:, :, 1].argmax()][0])
 
         return np.array([left_point, right_point, top_point, bottom_point])
+
+    def get_id(self):
+        return self.id
 
     def get_left_point(self, index=-1):
         

@@ -15,6 +15,7 @@ class Trackable_Manager:
         self.old_trackables = []
         self.new_trackables = []
         self.frame = frame
+        self.retired_trackables = []
 
     '''
     Getters
@@ -24,6 +25,9 @@ class Trackable_Manager:
         for trackable in self.new_trackables:
             centers.append(trackable.get_center_point())
         return centers
+
+    def get_retired_trackables(self):
+        return self.retired_trackables
             
     def get_contours(self):
         contours = []
@@ -56,6 +60,7 @@ class Trackable_Manager:
                 trace_point1 = function(trackable, i)
 
             # Draw a circle at the most recent index for a traceable point
+            cv2.putText(draw_frame, str(trackable.get_id()), function(trackable), cv2.FONT_HERSHEY_SIMPLEX, 2, color=color, thickness=8)
             cv2.circle(draw_frame, function(trackable), 10, color, -1)
         return draw_frame
 
@@ -90,12 +95,13 @@ class Trackable_Manager:
         self.frame = frame
 
     # Propose a set of contours as candidates for new trackables. Returns a list the trackables it deems valid
-    def propose_trackables(self, trackables):
+    ''' SAVE_RETIRED_TRACKABLES SHOULD ONLY BE SET TO TRUE IF DATA IS CURRENTLY BEING LABELED BY HUMANS.'''
+    def propose_trackables(self, trackables, save_retired=False):
         self.old_trackables = self.new_trackables.copy()
 
         # The new trackables are deleted if they are determined to be an old_trackable that moved.
         # Else, they are added to new_trackables
-        self.new_trackables = self.__validate_trackables(trackables)
+        self.new_trackables = self.__validate_trackables(trackables, save_retired)
         
 
     '''
@@ -153,18 +159,22 @@ class Trackable_Manager:
 
     # Decides whether a trackable is persistent from a previous frame or brand new. This function removes trackables which have not been seen in a previous frame.
     # Returns list of trackables that have either been updated or are new.
-    def __validate_trackables(self, new_trackables):
+    def __validate_trackables(self, new_trackables, save_retired=False):
         
         old_trackables = self.old_trackables
-
+        
         # Modifies the new_trackables array by removing new_trackables that are actually old_trackables that moved.
         for i in range(len(old_trackables)):
             old_track = old_trackables[i]
+            absorb = False
             for j in range(len(new_trackables)):
                 new_track = new_trackables[j]
                 # If the center of old is in the contour of new, update the old_trackable and add it to the return array
                 if self.__center_in_contour(old_track, new_track):
                     old_track = self.__absorb_trackable(old_track, new_track)
                     new_trackables[j] = old_track
+                    absorb = True
+            # If we know this old_track did not inherit a new_trackable, it will be retired so save it
+            if not absorb and save_retired: self.retired_trackables += [old_track]
 
         return new_trackables

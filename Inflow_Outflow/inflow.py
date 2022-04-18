@@ -8,7 +8,6 @@ import numpy as np
 import math
 import imutils
 from shapely.geometry import Point, Polygon
-from optic_flow import lk_optic_flow
 from inflow import *
 
 # PARAMETERS

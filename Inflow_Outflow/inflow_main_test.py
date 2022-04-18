@@ -13,6 +13,7 @@ from inflow import *
 from Trackable import Trackable
 from Trackable_Manager import Trackable_Manager
 from math import *
+import read_write
 
 '''
     Document conventions:
@@ -86,7 +87,7 @@ def main():
     # prev_points = np.full((4,2), None)
     point_count = 0
     keep_tracking = False 
-
+    # pdb.set_trace()
 
     try:
         
@@ -128,7 +129,8 @@ def main():
             # Get list of trackables
             trackables = track_man.generate_trackables(contours)
             # Add trackables to manager
-            track_man.propose_trackables(trackables)
+            ''' SAVE_RETIRED_TRACKABLES SHOULD ONLY BE SET TO TRUE IF DATA IS CURRENTLY BEING LABELED BY HUMANS.'''
+            track_man.propose_trackables(trackables, True)
             # Get visualization of all the trackables
             track_frame = track_man.get_trackable_contours_frame()
             
@@ -138,10 +140,6 @@ def main():
             Draw and trace the points across the screen
             '''
             traced_points_frame = track_man.get_traced_frame()
-
-            
-            for i in range(len(trackables)):
-                print(trackables[i].get_func_contour_size(func=np.max), trackables[i])
 
 
             '''
@@ -170,7 +168,8 @@ def main():
             if recording == True:
                 record.start_recording(window, frames)
 
-
+        '''LABEL THE DATA MANUALLY'''
+        read_write.label_data(track_man, addr)
             
         logger.stop()
     except Exception as e:
