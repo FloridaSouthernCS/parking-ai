@@ -20,6 +20,11 @@ def label_data(track_man, reference_video):
     print("NOTE: If the video is severely littered with noise, do not continue with the labeling process here for that video")
     
     for trackable in track_man.get_retired_trackables():
+
+        # Aquire training data
+        # If we don't have enough data to work with, its probably not a car
+        if len(trackable.get_life_func()) < 3: continue
+
         # This is only here to validate functions exist. Comment out when running and delete when done
         result = input("Trackable: " + str(trackable.get_id()) + " is a car(c), not_car(n), noise([enter]), delete(d): ")
         
@@ -33,23 +38,21 @@ def label_data(track_man, reference_video):
         else:
             labels.append(-1)
 
-        # Aquire training data
-        # If we don't have enough data to work with, its probably not a car
-        if len(trackable.get_life_func()) >= 3:
-            temp_data = [trackable.get_life_func()]
-            temp_data.append(trackable.get_func_contour_size(function=np.mean))
-            temp_data.append(trackable.get_func_contour_size(function=np.median))
-            temp_data.append(trackable.get_func_contour_size(function=np.max))
-
-            start = np.array(temp_data[0][0])
-            middle = np.array(temp_data[0][len(temp_data[0])//2])
-            end = np.array(temp_data[0][-1])
-            print("start to end: ", dist(start, end))
-            print("gait: ", gait(start, middle, end))
-            print("acceleration: ", accel(start, middle, end))
-            
         
-            data.append(temp_data)
+        temp_data = [trackable.get_life_func()]
+        temp_data.append(trackable.get_func_contour_size(function=np.mean))
+        temp_data.append(trackable.get_func_contour_size(function=np.median))
+        temp_data.append(trackable.get_func_contour_size(function=np.max))
+
+        start = np.array(temp_data[0][0])
+        middle = np.array(temp_data[0][len(temp_data[0])//2])
+        end = np.array(temp_data[0][-1])
+        print("start to end: ", dist(start, end))
+        print("gait: ", gait(start, middle, end))
+        print("acceleration: ", accel(start, middle, end))
+        
+    
+        data.append(temp_data)
             
     
     result = input("All results are correct? Yes(y), No([enter]): ")
