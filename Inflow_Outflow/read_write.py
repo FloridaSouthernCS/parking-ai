@@ -94,17 +94,21 @@ def str_to_list(data):
     return new_data
 
 def nested_list_to_np(data):
-    new_data = np.array([])
+    new_data = []
     for item in data:
         for i in range(len(item)):
             
             if type(item[i]) == type([]):
-                temp = triangle_data(item[i])
-                item[i] = np.array(item[i], dtype=object)
-            
-        item = np.array(item, dtype=float)
-    data = np.array(data, dtype=object)
-    return data
+                tri = triangle_data(item[i])
+                
+                tri_arr = np.array(tri, dtype=float)
+                item_copy = np.copy(item[i+1:])
+                final_items = np.insert( item_copy, 0, tri_arr)
+                final_items = np.array(final_items, dtype=float)
+                new_data.append(np.array(final_items))
+                
+    new_data = np.array(new_data)
+    return new_data
 
 def save_to_file(path, reference_video, lines=[]):
     
@@ -120,6 +124,8 @@ def save_to_file(path, reference_video, lines=[]):
         return True
 
 def triangle_data(points):
+    
+    # pdb.set_trace()
     start = np.array(points[0])
     middle = np.array(points[ len(points)//2 ])
     end = np.array(points[-1])

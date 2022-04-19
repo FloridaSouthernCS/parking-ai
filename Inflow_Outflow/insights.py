@@ -22,10 +22,10 @@ def main():
     xtest = None
     ytest = None
 
+    pdb.set_trace()
+
 
 def get_training():
-    new_data = np.array([])
-    new_labels = np.array([])
     
     data = np.array(read_write.read_file(train_data_path))
     labels = np.array(read_write.read_file(train_labels_path))
@@ -33,19 +33,17 @@ def get_training():
     data = read_write.purge_references(data)
     
     data = read_write.str_to_list(data)
-    pdb.set_trace()
-    data = nested_list_to_np(data)
     
-    for i in range(len(data)):
-        
-        temp = read_write.triangle_data(data[i,0])
-        new_data = np.append(new_data, temp) 
-        
-    
-    
+    data = read_write.nested_list_to_np(data)
 
 
-    return new_data, new_labels
+    labels = read_write.purge_references(labels)
+    
+    labels = read_write.str_to_list(labels)
+
+    labels = np.array(labels)
+
+    return data, labels
 
 
     
