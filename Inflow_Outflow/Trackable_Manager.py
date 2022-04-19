@@ -128,6 +128,24 @@ class Trackable_Manager:
         persistent_trackable.append_contour(new_conts)
         
         return persistent_trackable
+
+    # Used to transfer data from an invalid trackable to a persistent trackable
+    def __absorb_trackable_respect_lifespan(self, persistent_trackable, invalid_trackable):
+
+        persistent_length = len(persistent_trackable.get_life_contours())
+        invalid_length = len(invalid_trackable.get_life_contours())
+
+        invalid_trackable.disable()
+
+        if persistent_length > invalid_length:
+            # Take the newest single contour of invalid and add it infront of the persistent
+            new_cont = invalid_trackable.get_contour_points()
+            persistent_trackable.append_contour(new_cont)
+        else:
+            new_conts = invalid_trackable.get_life_contours()
+            persistent_trackable.insert_contours(new_conts)
+        
+        return persistent_trackable
     # Decides whether a trackable is persistent from a previous frame or brand new. This function removes trackables which have not been seen in a previous frame.
     # Returns list of trackables that have either been updated or are new.
     def __validate_trackables(self, new_trackables, save_retired=False):
@@ -142,9 +160,12 @@ class Trackable_Manager:
                 new_track = new_trackables[j]
                 # If the center of old is in the contour of new, update the old_trackable and add it to the return array
                 if self.__center_in_contour(old_track, new_track):
-                    old_track = self.__absorb_trackable(old_track, new_track)
+                    old_track = self.__absorb_trackable_respect_lifespan(old_track, new_track)
                     new_trackables[j] = old_track
                     absorb = True
+                    print(old_track.get_id(), new_track.get_id())
+                    # if new_track.get_id() == 27: pdb.set_trace()
+                    
                 
                     
             # If we know this old_track did not inherit a new_trackable, it will be retired so save it

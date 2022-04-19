@@ -44,13 +44,6 @@ def label_data(track_man, reference_video):
         temp_data.append(trackable.get_func_contour_size(function=np.median))
         temp_data.append(trackable.get_func_contour_size(function=np.max))
 
-        start = np.array(temp_data[0][0])
-        middle = np.array(temp_data[0][len(temp_data[0])//2])
-        end = np.array(temp_data[0][-1])
-        print("start to end: ", dist(start, end))
-        print("gait: ", gait(start, middle, end))
-        print("acceleration: ", accel(start, middle, end))
-        
     
         data.append(temp_data)
             
