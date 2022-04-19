@@ -35,12 +35,15 @@ car_path = os.path.join(datapath, "Car")
 combo_path = os.path.join(datapath, "Combo")
 not_car_path = os.path.join(datapath, "Not_Car")
 
-addr = os.path.join(combo_path, "combo7.mp4")
+addr = os.path.join(car_path, "car9.mp4")
+# addr = os.path.join(combo_path, "combo6.mp4")
+# addr = os.path.join(not_car_path, "not_car7.mp4")
+
 
 
 
 # PARAMETERS
-VAR_THRESHOLD = 200
+VAR_THRESHOLD = 125
 CONTOUR_THRESHOLD = 7000 # COUNTOR THRESHOLD FOR CONTOUR AREA
 
 
