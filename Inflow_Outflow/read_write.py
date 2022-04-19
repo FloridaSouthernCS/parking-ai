@@ -101,7 +101,7 @@ def nested_list_to_np(data):
                 pdb.set_trace()
                 item[i] = np.array(item[i], dtype=object)
             
-        item = np.array(item, dtype=object)
+        item = np.array(item, dtype=float)
     data = np.array(data, dtype=object)
     return data
 
