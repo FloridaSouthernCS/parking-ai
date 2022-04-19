@@ -102,7 +102,9 @@ class Trackable_Manager:
         # The new trackables are deleted if they are determined to be an old_trackable that moved.
         # Else, they are added to new_trackables
         self.new_trackables = self.__validate_trackables(trackables, save_retired)
-        
+
+    def retire_all_trackables(self):
+        self.retired_trackables += self.new_trackables        
 
     '''
     Private

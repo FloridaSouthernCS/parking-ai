@@ -35,7 +35,7 @@ car_path = os.path.join(datapath, "Car")
 combo_path = os.path.join(datapath, "Combo")
 not_car_path = os.path.join(datapath, "Not_Car")
 
-addr = os.path.join(car_path, "car18.mp4")
+addr = os.path.join(car_path, "car9.mp4")
 
 
 
@@ -167,6 +167,9 @@ def main():
 
             if recording == True:
                 record.start_recording(window, frames)
+        
+        # Save the trackables in the final frame to the trackables in track_man
+        track_man.retire_all_trackables()
 
         '''LABEL THE DATA MANUALLY'''
         read_write.label_data(track_man, addr)

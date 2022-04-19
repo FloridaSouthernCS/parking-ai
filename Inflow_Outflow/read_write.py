@@ -33,12 +33,22 @@ def label_data(track_man, reference_video):
             labels.append(-1)
 
         # Aquire training data
-        temp_data = [trackable.get_life_func()]
-        temp_data.append(trackable.get_func_contour_size(function=np.mean))
-        temp_data.append(trackable.get_func_contour_size(function=np.median))
-        temp_data.append(trackable.get_func_contour_size(function=np.max))
+        # If we don't have enough data to work with, its probably not a car
+        if len(trackable.get_life_func()) >= 3:
+            temp_data = [trackable.get_life_func()]
+            temp_data.append(trackable.get_func_contour_size(function=np.mean))
+            temp_data.append(trackable.get_func_contour_size(function=np.median))
+            temp_data.append(trackable.get_func_contour_size(function=np.max))
 
-        data.append(temp_data)
+            start = np.array(temp_data[0][0])
+            middle = np.array(temp_data[0][len(temp_data[0])//2])
+            end = np.array(temp_data[0][-1])
+            print("start to end: ", dist(start, end))
+            print("gait: ", gait(start, middle, end))
+            print("acceleration: ", accel(start, middle, end))
+            
+        
+            data.append(temp_data)
             
     
     result = input("All results are correct? Yes(y), No([enter]): ")
@@ -67,7 +77,7 @@ def read_file(path):
 
 def save_to_file(path, reference_video, lines=[]):
     
-    strings = ['<ReferenceVideo: ' + str(reference_video) + '>'] + [str(x) for x in lines]
+    strings = ['\n<ReferenceVideo: ' + str(reference_video) + '>'] + [str(x) for x in lines]
     if strings in read_file(path):
         print("Cannot write. The specified ReferenceVideo: '{}' has identical data in file '{}'.".format(reference_video, path))
     elif strings[0] in read_file(path):
@@ -77,3 +87,21 @@ def save_to_file(path, reference_video, lines=[]):
             f.writelines('\n'.join(strings))
             f.close()
         return True
+
+def dist(start, end):
+    distance = int(np.linalg.norm(start - end))
+    return distance
+
+# Determines how different a vertex is in length compared to hypotenuse
+def gait(start, middle, end):
+    # (|start-middle| + |middle-end|) - (|start-end|)
+    deviation = ( dist(start, middle) + dist(middle, end) ) - dist(start, end)
+    return deviation
+
+# Determines if the car has increased or decreased in speed over time
+def accel(start, middle, end):
+    # (|middle - end| - |start - middle|)
+    acceleration = dist(middle, end) - dist(start, middle)
+    return acceleration
+
+
