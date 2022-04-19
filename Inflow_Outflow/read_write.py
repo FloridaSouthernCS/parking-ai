@@ -1,4 +1,5 @@
 # pca_knn.py
+import ast
 from Trackable_Manager import Trackable_Manager 
 from Trackable import Trackable
 import pdb
@@ -75,6 +76,35 @@ def read_file(path):
 
     return info
 
+def purge_references(data):
+    new_data = []
+    for item in data:
+        
+        if not '<' in item:
+            new_data.append(item)
+    
+    return new_data
+
+def str_to_list(data):
+    new_data = []
+    for item in data:
+        
+        new_data.append(ast.literal_eval(item))
+
+    return new_data
+
+def nested_list_to_np(data):
+    for item in data:
+        for i in range(len(item)):
+            
+            if type(item[i]) == type([]):
+                pdb.set_trace()
+                item[i] = np.array(item[i], dtype=object)
+            
+        item = np.array(item, dtype=object)
+    data = np.array(data, dtype=object)
+    return data
+
 def save_to_file(path, reference_video, lines=[]):
     
     strings = ['\n<ReferenceVideo: ' + str(reference_video) + '>'] + [str(x) for x in lines]
@@ -88,8 +118,26 @@ def save_to_file(path, reference_video, lines=[]):
             f.close()
         return True
 
+def triangle_data(points):
+    start = points[0]
+    middle = points[ len(points)//2 ]
+    end = points[-1]
+
+    
+    # Measure the euclidian traveled from start of life to end of life
+    start_end_distance = dist(start, end)
+    # Measure the difference between (start_end_distance) and (start_middle_end_distance)
+    middle_point_deviation = gait(start, middle, end)
+    # Measure the difference between (middle_end) and (start_middle)
+    aprox_acceleration = accel(start, middle, end)
+
+    return start_end_distance, middle_point_deviation, aprox_acceleration
+
+
+
+
 def dist(start, end):
-    distance = int(np.linalg.norm(start - end))
+    distance = np.linalg.norm(start - end)
     return distance
 
 # Determines how different a vertex is in length compared to hypotenuse

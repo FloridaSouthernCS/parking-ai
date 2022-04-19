@@ -129,8 +129,11 @@ class Trackable:
     def set_frame(self, frame):
         self.frame = frame
     
-    def add_contour(self, contour):
+    def append_contour(self, contour):
         self.life_contours += [contour]
+
+    def insert_contour(self, contour):
+        self.life_contours = [contour] + self.life_contours
 
     def disable(self):
         self.enabled = False
