@@ -80,7 +80,7 @@ def purge_references(data):
     new_data = []
     for item in data:
         
-        if not '<' in item:
+        if not '<' in item and item != '':
             new_data.append(item)
     
     return new_data
@@ -94,11 +94,12 @@ def str_to_list(data):
     return new_data
 
 def nested_list_to_np(data):
+    new_data = np.array([])
     for item in data:
         for i in range(len(item)):
             
             if type(item[i]) == type([]):
-                pdb.set_trace()
+                temp = triangle_data(item[i])
                 item[i] = np.array(item[i], dtype=object)
             
         item = np.array(item, dtype=float)
@@ -119,9 +120,9 @@ def save_to_file(path, reference_video, lines=[]):
         return True
 
 def triangle_data(points):
-    start = points[0]
-    middle = points[ len(points)//2 ]
-    end = points[-1]
+    start = np.array(points[0])
+    middle = np.array(points[ len(points)//2 ])
+    end = np.array(points[-1])
 
     
     # Measure the euclidian traveled from start of life to end of life

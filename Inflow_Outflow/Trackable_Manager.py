@@ -124,7 +124,7 @@ class Trackable_Manager:
     def __absorb_trackable(self, persistent_trackable, invalid_trackable):
         
         invalid_trackable.disable()
-        new_conts = invalid_trackable.get_life_contours()
+        new_conts = invalid_trackable.get_contour_points()
         persistent_trackable.append_contour(new_conts)
         
         return persistent_trackable
