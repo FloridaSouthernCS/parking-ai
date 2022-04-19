@@ -72,6 +72,12 @@ class Trackable:
     def get_life_contours(self):
         return self.life_contours
 
+    def append_contour(self, contour):
+        self.life_contours += contour
+
+    def insert_contour(self, contour):
+        self.life_contours = contour + self.life_contours
+
     def get_life_func(self, function=None):
         if function == None:
             function = self.get_center_point

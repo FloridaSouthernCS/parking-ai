@@ -150,11 +150,18 @@ class Trackable_Manager:
         return False
 
     # Used to transfer data from an invalid trackable to a persistent trackable
-    def __absorb_trackable(self, persistent_trackable, invalid_trackable):
+    def __absorb_trackable(self, persistent_trackable, invalid_trackable, old_first):
         
         invalid_trackable.disable()
-        new_conts = invalid_trackable.get_contour_points()
-        persistent_trackable.add_contour(new_conts)
+        new_conts = invalid_trackable.get_life_contours()
+        if old_first:
+            persistent_trackable.append_contour(new_conts)
+        else:
+            # temp = [new_conts] + persistent_trackable.get_life_contours()
+            # pdb.set_trace()
+            persistent_trackable.insert_contour(new_conts)
+
+
 
         return persistent_trackable
 
@@ -173,9 +180,12 @@ class Trackable_Manager:
                 new_track = new_trackables[j]
                 # If the center of old is in the contour of new, update the old_trackable and add it to the return array
                 if self.__center_in_contour(old_track, new_track):
-                    old_track = self.__absorb_trackable(old_track, new_track)
+                    old_track = self.__absorb_trackable(old_track, new_track, True)
                     new_trackables[j] = old_track
                     absorb = True
+                elif self.__center_in_contour(new_track, old_track):
+                    new_trackables[j] = self.__absorb_trackable(new_track, old_track, False)
+                    
             # If we know this old_track did not inherit a new_trackable, it will be retired so save it
             if not absorb and save_retired: self.retired_trackables += [old_track]
 
