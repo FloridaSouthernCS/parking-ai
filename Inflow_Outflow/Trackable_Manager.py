@@ -147,7 +147,7 @@ class Trackable_Manager:
         
         return persistent_trackable
 
-    def __absorb_weakest_trackable(self, trackable1, trackable2):
+    def __absorb_younger_trackable(self, trackable1, trackable2):
   
         track1_length = len(trackable1.get_life_contours())
         track2_length = len(trackable2.get_life_contours())
@@ -177,11 +177,10 @@ class Trackable_Manager:
                 new_track = new_trackables[j]
                 # If the center of old is in the contour of new, update the old_trackable and add it to the return array
                 if self.__center_in_contour(old_track, new_track):
-                    old_track = self.__absorb_weakest_trackable(old_track, new_track)
+                    old_track = self.__absorb_younger_trackable(old_track, new_track)
                     new_trackables[j] = old_track
                     absorb = True
-                    print(old_track.get_id(), new_track.get_id())
-                    # if new_track.get_id() == 27: pdb.set_trace()
+                    
                     
                 
                     
