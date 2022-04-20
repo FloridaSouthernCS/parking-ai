@@ -149,7 +149,6 @@ def main():
             Display the frames
             '''
             display_frames = np.asarray([frame_norm, backsub_frame, contour_foreground, track_frame, traced_points_frame]) # display frames 
-
             # Format window output
             max_h_frames = 3
             window = format_window(display_frames, max_h_frames, screen_width*.75)
