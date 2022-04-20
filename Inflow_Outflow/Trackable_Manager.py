@@ -163,6 +163,25 @@ class Trackable_Manager:
             persistent_trackable = trackable2
         
         return persistent_trackable
+
+    def __absorb_younger_or_smaller_trackable(self, trackable1, trackable2, thresh=2):
+    
+        track1_length = len(trackable1.get_life_contours())
+        track2_length = len(trackable2.get_life_contours())
+        track1_area = trackable1.get_life_contour_area()
+        track2_area = trackable2.get_life_contour_area()
+        
+        if track1_length > track2_length or track1_area*thresh > track2_area:
+            # Take the newest single contour of invalid and add it infront of the persistent
+            new_cont = trackable2.get_contour_points()
+            trackable1.append_contour(new_cont)
+            persistent_trackable = trackable1
+        else:
+            new_conts = trackable1.get_life_contours()
+            trackable2.append_contours(new_conts)
+            persistent_trackable = trackable2
+        
+        return persistent_trackable
     # Decides whether a trackable is persistent from a previous frame or brand new. This function removes trackables which have not been seen in a previous frame.
     # Returns list of trackables that have either been updated or are new.
     def __validate_trackables(self, new_trackables, save_retired=False):
@@ -177,9 +196,10 @@ class Trackable_Manager:
                 new_track = new_trackables[j]
                 # If the center of old is in the contour of new, update the old_trackable and add it to the return array
                 if self.__center_in_contour(old_track, new_track):
-                    old_track = self.__absorb_younger_trackable(old_track, new_track)
+                    old_track = self.__absorb_younger_or_smaller_trackable(old_track, new_track, 2)
                     new_trackables[j] = old_track
                     absorb = True
+                    
                     
                     
                 
