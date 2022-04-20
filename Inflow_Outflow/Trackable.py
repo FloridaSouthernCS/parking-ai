@@ -57,6 +57,15 @@ class Trackable:
         return bimask
     def get_contour_points(self, index=-1):
         return self.life_contours[index].copy()
+    def get_contour_area(self, index=-1):
+        return cv2.contourArea(self.get_contour_points(index))
+    def get_life_contour_area(self, function=np.mean):
+        arr = np.array([])
+        life = self.get_life_contours()
+        for i in range(len(life)):
+            arr = np.append(arr, life[i])
+        life_area = function(arr)
+        return life_area
     def get_life_contours(self):
         return self.life_contours
     def append_contour(self, contour):
