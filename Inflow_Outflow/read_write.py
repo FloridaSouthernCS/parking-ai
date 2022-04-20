@@ -70,6 +70,7 @@ def read_file(path):
         info = file.read().split('\n')
         file.close()
 
+    
     return info
 
 def purge_references(data):
