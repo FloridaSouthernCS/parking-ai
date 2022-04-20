@@ -134,8 +134,8 @@ def triangle_data(points):
     middle_point_deviation = gait(start, middle, end)
     # Measure the difference between (middle_end) and (start_middle)
     aprox_acceleration = accel(start, middle, end)
-
-    return start_end_distance, middle_point_deviation, aprox_acceleration
+    # pdb.set_trace()
+    return start_end_distance, middle_point_deviation, aprox_acceleration , len(points)
 
 
 

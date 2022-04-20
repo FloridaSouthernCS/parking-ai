@@ -35,9 +35,9 @@ car_path = os.path.join(datapath, "Car")
 combo_path = os.path.join(datapath, "Combo")
 not_car_path = os.path.join(datapath, "Not_Car")
 
-# addr = os.path.join(car_path, "car15.mp4")
-addr = os.path.join(combo_path, "combo1.mp4")
-# addr = os.path.join(not_car_path, "not_car7.mp4")
+# addr = os.path.join(car_path, "car3.mp4")
+# addr = os.path.join(combo_path, "combo4.mp4")
+addr = os.path.join(not_car_path, "not_car10.mp4")
 
 
 
