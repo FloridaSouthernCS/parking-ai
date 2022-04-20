@@ -11,6 +11,15 @@ import pdb
 from sklearn import svm
 from sklearn.datasets import make_blobs
 from sklearn.model_selection import train_test_split
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+
+# sci-kit imports
+from sklearn import svm
+from skimage.feature import hog
+from skimage.util import montage
+from sklearn.metrics import plot_confusion_matrix
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
 datapath = os.path.join(main_path, "Data", "Inflow")
@@ -37,6 +46,25 @@ def main():
 
     print("Training Accuracy: ", clf.score(x, t))
     print("Testing Accuracy:", clf.score(xT, tT))
+
+    mislabeled_train = np.where(clf.predict(x) != t)
+    mislabeled_test = np.where(clf.predict(xT) != tT)
+    
+    print("\nCreating confusion matrix... ")
+    plt.rc('font', size=6)
+    plt.rc('figure', titlesize=10)
+
+    fig, ax = plt.subplots(figsize=(8, 6))
+    plt.subplots_adjust(bottom=0.2, top=0.9, right=0.9, left=0.1)
+
+    ax.set_title("SVM Confusion Matrix")
+    cm = plot_confusion_matrix(clf, xT, tT,
+                                normalize='all',
+                                display_labels=[0, 1],
+                                xticks_rotation='vertical',
+                                cmap=plt.cm.Blues,
+                                ax=ax)
+    plt.show()
 
     pdb.set_trace()
 
