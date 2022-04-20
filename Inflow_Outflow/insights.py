@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import pdb
 from sklearn import svm
 from sklearn.datasets import make_blobs
+from sklearn.model_selection import train_test_split
 
 main_path = os.path.dirname(os.path.abspath(__file__)) 
 datapath = os.path.join(main_path, "Data", "Inflow")
@@ -22,37 +23,20 @@ def main():
     n = 40  # number of samples
     classes = 2  # number of classes
     seed = 6  # for repeatability
-    x, t = get_training()
+    x_raw, t_raw = get_training()
     
     # Remove -1's from the dataset
-    t = np.where(t==1, t, t*0)
+    t_raw = np.where(t_raw==1, t_raw, t_raw*0)
+
+    x, xT, t, tT = train_test_split(x_raw, t_raw, test_size=0.33, random_state=42)
     
     
     # Train SVM
     clf = svm.SVC(kernel='linear', C=1)
     clf.fit(x, t)
 
-    # Show some stuff
-    plt.scatter(x[:, 0], x[:, 1], c=t, s=30, cmap=plt.cm.Paired)
-
-    # Compute decision boundary
-    ax = plt.gca()
-    xlim = ax.get_xlim()
-    ylim = ax.get_ylim()
-    X = np.linspace(xlim[0], xlim[1], 30)
-    Y = np.linspace(ylim[0], ylim[1], 30)
-    Xm, Ym = np.meshgrid(X, Y)
-    Xtest = np.vstack([Xm.ravel(), Ym.ravel()]).T
-    d = clf.decision_function(Xtest).reshape(Xm.shape)
-    ax.contour(Xm, Ym, d,
-        colors='k',
-        levels=[-1, 0, 1],
-        alpha=0.5,
-        linestyles=['--', '-', '--'])
-    sv = clf.support_vectors_
-    ax.scatter(sv[:, 0], sv[:, 1],
-        s=100, linewidth=1, facecolors='none', edgecolors='k')
-    plt.show()
+    print("Training Accuracy: ", clf.score(x, t))
+    print("Testing Accuracy:", clf.score(xT, tT))
 
     pdb.set_trace()
 
