@@ -101,3 +101,14 @@
 -1
 -1
 -1
+<ReferenceVideo: /Users/hannahwilberding/Documents/Documents - Hannah’s MacBook Pro/GitHub.tmp/parking-ai/Inflow_Outflow/Data/Inflow/Not_Car/not_car1.mp4>
+-1
+0
+-1
+-1
+0
+-1
+<ReferenceVideo: /Users/hannahwilberding/Documents/Documents - Hannah’s MacBook Pro/GitHub.tmp/parking-ai/Inflow_Outflow/Data/Inflow/Not_Car/not_car2.mp4>
+0
+<ReferenceVideo: /Users/hannahwilberding/Documents/Documents - Hannah’s MacBook Pro/GitHub.tmp/parking-ai/Inflow_Outflow/Data/Inflow/Not_Car/not_car3.mp4>
+0
