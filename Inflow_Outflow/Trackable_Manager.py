@@ -54,6 +54,27 @@ class Trackable_Manager:
             cv2.putText(draw_frame, str(trackable.get_id()), function(trackable), cv2.FONT_HERSHEY_SIMPLEX, 2, color=color, thickness=8)
             cv2.circle(draw_frame, function(trackable), 10, color, -1)
         return draw_frame
+
+    def get_triangle_frame(self):
+        draw_frame = self.frame.copy()
+        for trackable in self.new_trackables:
+            color = trackable.get_color()
+
+            trace_point1 = trackable.get_center_point(-1)
+            trace_point2 = trackable.get_center_point( len(trackable.get_life_contours())//2 )
+            trace_point3 = trackable.get_center_point( 0 )
+            
+            cv2.line(draw_frame, trace_point1, trace_point2, (255,0,0), 5)
+            cv2.line(draw_frame, trace_point2, trace_point3, (0,255,0), 5)
+            cv2.line(draw_frame, trace_point3, trace_point1, (0,0,255), 5)  
+
+            # Draw a circle at the most recent index for a traceable point
+            cv2.putText(draw_frame, str(trackable.get_id()), trackable.get_center_point(), cv2.FONT_HERSHEY_SIMPLEX, 2, color=color, thickness=8)
+            
+        return draw_frame
+
+
+
     # Returns a list of the left, right, top, and bottom-most points for each Trackable
     def get_extreme_points(self):
         points = []

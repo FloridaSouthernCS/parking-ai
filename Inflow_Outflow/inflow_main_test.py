@@ -35,12 +35,9 @@ car_path = os.path.join(datapath, "Car")
 combo_path = os.path.join(datapath, "Combo")
 not_car_path = os.path.join(datapath, "Not_Car")
 
-# addr = os.path.join(car_path, "car3.mp4")
-# addr = os.path.join(combo_path, "combo4.mp4")
-addr = os.path.join(not_car_path, "not_car10.mp4")
-
-
-
+addr = os.path.join(car_path, "car9.mp4")
+# addr = os.path.join(combo_path, "combo3.mp4")
+# addr = os.path.join(not_car_path, "not_car11.mp4")
 
 # PARAMETERS
 VAR_THRESHOLD = 175
@@ -144,11 +141,12 @@ def main():
             '''
             traced_points_frame = track_man.get_traced_frame()
 
+            triangle_frame = track_man.get_triangle_frame()
 
             '''
             Display the frames
             '''
-            display_frames = np.asarray([frame_norm, backsub_frame, contour_foreground, track_frame, traced_points_frame]) # display frames 
+            display_frames = np.asarray([frame_norm, backsub_frame, contour_foreground, track_frame, traced_points_frame, triangle_frame]) # display frames 
             # Format window output
             max_h_frames = 3
             window = format_window(display_frames, max_h_frames, screen_width*.75)
@@ -174,7 +172,7 @@ def main():
         track_man.retire_all_trackables()
 
         '''LABEL THE DATA MANUALLY'''
-        read_write.label_data(track_man, addr)
+        # read_write.label_data(track_man, addr)
             
         logger.stop()
     except Exception as e:

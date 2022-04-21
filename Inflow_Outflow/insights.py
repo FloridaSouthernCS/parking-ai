@@ -40,6 +40,8 @@ def main():
     t_raw = np.where(t_raw==1, t_raw, t_raw*0) 
     labels = ['noise/not_car', 'car']
 
+    
+
     # Get only cars and noise
     # t_raw = t_raw[np.where(t_raw!=0)] 
     # x_raw = x_raw[np.where(t_raw!=0)]
