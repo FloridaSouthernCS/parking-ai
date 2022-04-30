@@ -1,18 +1,16 @@
 # inflow_main.py
 
-from sys import displayhook
 import cv2 
 import os
-
 import numpy as np 
 import tkinter as tk
+from math import *
+
 import key_log
 import record
-from optic_flow import lk_optic_flow
 from inflow import *
-from Trackable import Trackable
 from Trackable_Manager import Trackable_Manager
-from math import *
+import read_write
 
 '''
     Document conventions:
@@ -34,18 +32,12 @@ car_path = os.path.join(datapath, "Car")
 combo_path = os.path.join(datapath, "Combo")
 not_car_path = os.path.join(datapath, "Not_Car")
 
-# addr = os.path.join(car_path, "car1.mp4")
-# addr = os.path.join(combo_path, "combo5.mp4")
-# addr = os.path.join(not_car_path, "not_car10.mp4")
-
-# addr = os.path.join(car_path, "car8.mp4")
-# addr = os.path.join(car_path, "car10.mp4")
-# addr = os.path.join(combo_path, "combo7.mp4")
-addr = os.path.join(not_car_path, "not_car10.mp4")
-
+addr = os.path.join(car_path, "car9.mp4")
+# addr = os.path.join(combo_path, "combo3.mp4")
+# addr = os.path.join(not_car_path, "not_car1.mp4")
 
 # PARAMETERS
-VAR_THRESHOLD = 200
+VAR_THRESHOLD = 175
 CONTOUR_THRESHOLD = 7000 # COUNTOR THRESHOLD FOR CONTOUR AREA
 
 
@@ -76,8 +68,8 @@ def main():
     print("Controls: ")
     print("  s: Start/Stop")
     print("  r: Record Start/Pause")
-    # print("  a: Previous")
-    # print("  d: Next")
+    print("  q: Quit")
+    
     logger = key_log.log(['s', 'r', 'q'])
     logger.start()
 
@@ -89,101 +81,73 @@ def main():
 
     # Get R.O.I. tool
     background_object = cv2.createBackgroundSubtractorMOG2(varThreshold=VAR_THRESHOLD, detectShadows=False) 
-    # prev_points = np.full((4,2), None)
-    point_count = 0
-    keep_tracking = False 
-
+    
 
     try:
         
         ret, frame = cap.read()
         old_frame = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
-        lk_flow = lk_optic_flow(old_frame, feature_params, lk_params)
 
         track_man = Trackable_Manager(frame)
         
-        p0 = []
-        cmask = []
         while True:
             
             ''' 
-            FRAME 1
             Raw input 
             '''
             ret, frame = cap.read()
             if not ret: break
 
             ''' 
-            FRAME 2 and 3
+            FRAME 1 and 2
             Background subtraction and Frame normalization
             '''
+            # Modify the background object. Somehow doing this process twice: once before and once after frame norm improves performance.
             backsub_mask1, backsub_frame1 = back_sub(frame.copy(), background_object)
+            # normalize the frame to assist with background subtraction
             frame_norm = cv2.normalize(frame, frame, 0, 220, cv2.NORM_MINMAX)
             backsub_mask_grey, backsub_frame = back_sub(frame_norm, background_object)
          
             ''' 
-            FRAME 4
+            FRAME 3
             Get Contours 
             '''
-            contour_foreground, cmask, contours = get_cmask(backsub_mask_grey, frame)
-            
-            ''' 
-            FRAME 5
-            Get Extreme points 
-            '''
-            points_frame, tracking_points, point_count = get_tracking_points(frame_norm, contours, point_count) # Isolate extreme points from contours
-            
-            '''
-            FRAME 6 
-            Track Movement over time of extreme points
-            '''
-            # determine if we keep tracking the points 
-            keep_tracking = keep_tracking_points(tracking_points, point_count, 3, keep_tracking)
-
-            if keep_tracking:
-                flow_img = get_optic_flow(lk_flow, cmask, frame_norm.copy(), tracking_points)
-            else:
-                flow_img = frame_norm.copy()
+            contour_foreground, cmask, contours = get_cmask(backsub_mask_grey, frame_norm)
 
             '''
-            FRAME 7
+            FRAME 4
             Get Contours frame of trackables
             '''
             track_man.set_frame(frame_norm)
             # Get list of trackables
             trackables = track_man.generate_trackables(contours)
             # Add trackables to manager
-            track_man.propose_trackables(trackables)
+            ''' SAVE_RETIRED_TRACKABLES SHOULD ONLY BE SET TO TRUE IF DATA IS CURRENTLY BEING LABELED BY HUMANS.'''
+            track_man.propose_trackables(trackables, True)
             # Get visualization of all the trackables
             track_frame = track_man.get_trackable_contours_frame()
             
-            '''
-            FRAME 8
-            Get centers frame of trackables
-            '''
-            # Get the center points of each trackable
-            centers = track_man.get_centers()
-            center_frame = draw_points(frame_norm.copy(), centers)
 
             '''
-            FRAME 9
+            FRAME 5
             Draw and trace the points across the screen
             '''
             traced_points_frame = track_man.get_traced_frame()
 
+            triangle_frame = track_man.get_triangle_frame()
 
             '''
             Display the frames
             '''
-            display_frames = np.asarray([frame, frame_norm, backsub_frame, contour_foreground, track_frame, traced_points_frame]) # display frames 
-
+            # Change the contents of this array to anything you desire and it will be displayed
+            display_frames = np.asarray([frame_norm, backsub_frame, contour_foreground, track_frame, traced_points_frame, triangle_frame]) # display frames 
             # Format window output
             max_h_frames = 3
             window = format_window(display_frames, max_h_frames, screen_width*.75)
 
             # Show image
             cv2.imshow("", window)
-            cv2.waitKey(50)
+            cv2.waitKey(1)
 
             ''' Update loop variables '''
             if len(frame) > 0:
@@ -197,8 +161,12 @@ def main():
 
             if recording == True:
                 record.start_recording(window, frames)
+        
+        # Save the trackables in the final frame to the trackables in track_man
+        track_man.retire_all_trackables()
 
-
+        '''LABEL THE DATA MANUALLY'''
+        # read_write.label_data(track_man, addr)
             
         logger.stop()
     except Exception as e:

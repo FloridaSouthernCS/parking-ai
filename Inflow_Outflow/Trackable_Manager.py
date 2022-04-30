@@ -108,9 +108,11 @@ class Trackable_Manager:
         # Else, they are added to new_trackables
         self.new_trackables = self.__validate_trackables(trackables, save_retired)
     def retire_all_trackables(self):
-        self.retired_trackables += self.new_trackables        
+        self.retired_trackables += self.new_trackables  
+
+          
     '''
-    Private
+    Persistence functions
     '''
     # Takes in 2 arrays of contours 
     def __intersection_present(self, trackable1, trackable2):
@@ -141,6 +143,8 @@ class Trackable_Manager:
         if result == 1:
             return True
         return False
+
+    '''Dominance functions'''
     # Used to transfer data from an invalid trackable to a persistent trackable
     def __absorb_trackable(self, persistent_trackable, invalid_trackable):
         
@@ -203,6 +207,8 @@ class Trackable_Manager:
             persistent_trackable = trackable2
         
         return persistent_trackable
+
+    '''Trackble validation'''
     # Decides whether a trackable is persistent from a previous frame or brand new. This function removes trackables which have not been seen in a previous frame.
     # Returns list of trackables that have either been updated or are new.
     def __validate_trackables(self, new_trackables, save_retired=False):

@@ -1,9 +1,7 @@
 # inflow.py
+# Holds many of the functions used for inflow_main
 
-from turtle import left
 import cv2 
-import os
-import pdb
 import numpy as np 
 import math
 import imutils
@@ -32,17 +30,18 @@ def back_sub(fgmask, background_object):
 
 def get_cmask(fgmask, frame):
     '''This method finds the contour areas and grab a convex hull around the contour areas. 
-    It repeats this process to group contour areas together'''
+    It repeats this process to group contour areas together
+    
+    IF ANYONE IS READING THIS IN THE FUTURE, THIS IS A POOR IMPLEMENTATION. THIS FUNCTION FINDS CONTOURS, DRAWS THEM,
+    THEN USES THE DRAWN OUTPUT AS INPUT. IN REALITY, NO DRAWING SHOULD OCCUR UNTIL THE END.
+    '''
 
-    # Find contours twice to merge all contours that touch
+    # Find contours thrice to merge all contours that touch
     cmask, contours = find_and_draw_contours(frame, fgmask)
     cmask = contours_to_foreground_mask(np.array(cmask), (0,255,0))     
     cmask, contours = find_and_draw_contours(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
     cmask = contours_to_foreground_mask(cmask, (255,255,255))
     _, contours = find_and_draw_contours(frame, cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
-    # cv2.imshow('a', _)
-    # cv2.waitKey()
-    # print("contour num: ", len(contours))
 
     # Show the mask applied to the original frame. Car in grayscale should appear amongst a sea of black pixels.
     foreground = cv2.bitwise_and(frame, frame, mask=cv2.cvtColor(cmask, cv2.COLOR_RGB2GRAY))
@@ -83,96 +82,6 @@ def zeros_frame(frame):
     filler = np.zeros(np.asarray(frame).shape, dtype=np.uint8 )
     return filler
 
-def get_tracking_points(frame, contours, count):
-    '''This method grabs the left, right, top, and bottom points of a contour area'''
-    
-    points_frame = frame.copy()
-
-    # If we have contours, choose the contours we want and draw them
-    extreme_points = []
-    if (len(contours) > 0):
-        
-        extreme_points = get_extreme_points(contours) # grab extreme points on contours 
-
-        for point in extreme_points: # draw the extreme points being tracked
-            points_frame = cv2.circle(points_frame, point, 8, (255, 0, 0), -1)
-
-    points_frame = draw_polygon(points_frame) # draw area of interest 
-    extreme_points, count = get_valid_points(extreme_points, count)
-
-    return points_frame, extreme_points, count
-
-def draw_points(frame, points):
-    draw_frame = frame.copy()
-    
-    for point in points:
-        draw_frame = cv2.circle(draw_frame, point, 8, (255, 0, 0), -1)
-    return draw_frame
-
-
-def get_extreme_points(contours):
-    '''Grab the extreme right, left, top, and bottom points of the contour area'''
-    points = max(contours, key=cv2.contourArea) # grab all max points
-    
-    # get top, bottom, left, right points
-    left_point = tuple(points[points[:, :, 0].argmin()][0])
-    right_point = tuple(points[points[:, :, 0].argmax()][0])
-    top_point = tuple(points[points[:, :, 1].argmin()][0])
-    bottom_point = tuple(points[points[:, :, 1].argmax()][0])
-
-    return np.array([left_point, right_point, top_point, bottom_point]) 
-
-def get_valid_points(points, count):
-    '''This counts the number of points that have hit the left side'''
-    for i in range(len(points)):
-        if points[i][0] <= 10:
-            count += 1
-
-    return points, count
-
-def keep_tracking_points(tracking_points, point_count, tracking_points_threshold, keep_tracking):
-    '''This method controls if the points should be tracked using optic flow'''
-    # if there's at least 3 points that has hit the left of the frame stop tracking
-    if point_count >= tracking_points_threshold: 
-        return False
-    # if motion is detected in area of interest start tracking 
-    elif motion_detected_in_area_of_interest(tracking_points): 
-        return True 
-    return keep_tracking
-
-
-
-def draw_polygon(points_frame):
-    '''Draws the Polygon Area of Interest on the frame'''
-    
-    # display start area of interest in red 
-    points = np.array([[600, 150], [950, 380], [1023, 300], [1023, 170],[850, 100]], np.int32).reshape((-1, 1, 2))
-    cv2.polylines(points_frame, [points], True, (0,0,255), 2)
-
-    return points_frame 
-
-def motion_detected_in_area_of_interest(points):
-    '''This method tests if the right most point of a contour area entered into the area of iterest'''
-    for point in points:
-        point = Point(point)
-        area_of_interest = Polygon([(600, 50), (500, 450), (1000, 450), (1000, 50)])
-        if area_of_interest.contains(point): return True
-    return False 
-
-def get_optic_flow(lk_flow, cmask, frame, tracking_points):
-
-    '''Calls the optic flow function to track the tracking_points'''
-    flow_img = frame.copy()
-    if not type_null(tracking_points): 
-        lk_flow.set_mask(cmask)
-        flow_img = lk_flow.get_flow(flow_img, tracking_points)
-
-    return flow_img
-
-def type_null(array):
-    is_null = type(array) == type(None) or array == []
-    return is_null
-
 def format_window(frames, max_h_frames, max_width):
     '''This method is used to format the final output window
     PARAMETERS: 
@@ -182,8 +91,6 @@ def format_window(frames, max_h_frames, max_width):
 
     filler = zeros_frame(frames[0])
     
-    single_frame_ratio = frames[0].shape[0]/frames[0].shape[1]
-
     frame_count = len(frames)
     
     filler_count = 0
